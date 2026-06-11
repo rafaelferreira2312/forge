@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FORGE — Rust Prompt Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0D0D0D;
+    --surface:  #141414;
+    --surface2: #1E1E1E;
+    --border:   #2A2A2A;
+    --ember:    #FF4500;
+    --ember2:   #FF6B35;
+    --gold:     #FFB347;
+    --text:     #F0F0F0;
+    --muted:    #666;
+    --dim:      #999;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── CANVAS DE FAÍSCAS ── */
+  #sparks-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 48px;
+    background: linear-gradient(to bottom, rgba(13,13,13,0.95), transparent);
+  }
+
+  .nav-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: 0.12em;
+    color: var(--ember);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--dim);
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--ember); }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 48px 80px;
+    text-align: center;
+  }
+
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--ember);
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.2s forwards;
+  }
+
+  .hero-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(56px, 10vw, 120px);
+    font-weight: 800;
+    line-height: 0.92;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.4s forwards;
+  }
+
+  .hero-title .ember { color: var(--ember); }
+
+  .hero-sub {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(16px, 2.5vw, 22px);
+    color: var(--dim);
+    font-weight: 400;
+    margin-bottom: 64px;
+    max-width: 540px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.6s forwards;
+  }
+
+  /* ── TERMINAL AO VIVO ── */
+  .live-terminal {
+    width: 100%;
+    max-width: 760px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.8s forwards;
+    box-shadow: 0 0 80px rgba(255,69,0,0.08);
+  }
+
+  .terminal-bar {
+    background: var(--surface2);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #FF5F57; }
+  .dot-y { background: #FEBC2E; }
+  .dot-g { background: #28C840; }
+
+  .terminal-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-left: 8px;
+    letter-spacing: 0.06em;
+  }
+
+  .terminal-body {
+    padding: 28px 32px;
+    text-align: left;
+  }
+
+  .t-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  .t-label {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .t-label.you  { background: rgba(255,69,0,0.15); color: var(--ember); border: 1px solid rgba(255,69,0,0.3); }
+  .t-label.forge { background: rgba(255,179,71,0.1); color: var(--gold); border: 1px solid rgba(255,179,71,0.25); }
+  .t-label.ai   { background: rgba(100,200,100,0.1); color: #6EC98A; border: 1px solid rgba(100,200,100,0.2); }
+
+  .t-text { color: var(--text); line-height: 1.7; }
+  .t-text.input-raw { color: var(--dim); }
+
+  .t-pipe {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px;
+    background: rgba(255,69,0,0.04);
+    border: 1px solid rgba(255,69,0,0.12);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    margin-left: 72px;
+  }
+
+  .pipe-item {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--dim);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .pipe-item::before {
+    content: '→';
+    color: var(--ember);
+    font-size: 12px;
+  }
+
+  .pipe-item span { color: var(--text); }
+
+  .t-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0;
+  }
+
+  .typing::after {
+    content: '█';
+    animation: blink 1s infinite;
+    color: var(--ember);
+  }
+
+  /* ── SEÇÃO GENÉRICA ── */
+  section {
+    position: relative;
+    z-index: 1;
+    padding: 120px 48px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--ember);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+  }
+
+  .section-body {
+    color: var(--dim);
+    font-size: 17px;
+    line-height: 1.8;
+    max-width: 680px;
+  }
+
+  /* ── LINHA DO TEMPO — ORIGEM ── */
+  .origin-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    margin-top: 64px;
+    align-items: start;
+  }
+
+  .origin-text { color: var(--dim); font-size: 16px; line-height: 1.9; }
+  .origin-text p { margin-bottom: 20px; }
+  .origin-text strong { color: var(--text); }
+
+  .origin-stat-block {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 28px;
+    border-left: 3px solid var(--ember);
+  }
+
+  .stat-number {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--ember);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-desc {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--dim);
+    letter-spacing: 0.06em;
+  }
+
+  /* ── PIPELINE VISUAL ── */
+  .pipeline-wrapper {
+    margin-top: 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .pipe-stage {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 24px;
+    position: relative;
+  }
+
+  .pipe-stage:not(:last-child) .pipe-line {
+    position: absolute;
+    left: 23px;
+    top: 48px;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--ember), var(--border));
+  }
+
+  .pipe-node {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--ember);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ember);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .pipe-content {
+    padding: 12px 0 48px;
+  }
+
+  .pipe-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  .pipe-desc {
+    color: var(--dim);
+    font-size: 15px;
+    line-height: 1.7;
+    max-width: 560px;
+  }
+
+  .pipe-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ember);
+    letter-spacing: 0.1em;
+    margin-top: 8px;
+  }
+
+  /* ── APRENDIZADO ADAPTATIVO ── */
+  .adaptive-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 56px;
+  }
+
+  .adaptive-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .adaptive-card:hover {
+    border-color: rgba(255,69,0,0.4);
+    transform: translateY(-2px);
+  }
+
+  .adaptive-card-icon {
+    font-size: 28px;
+    margin-bottom: 16px;
+  }
+
+  .adaptive-card-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .adaptive-card-body {
+    color: var(--dim);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* ── LINHA DO TEMPO DE APRENDIZADO ── */
+  .timeline {
+    margin-top: 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .tl-item {
+    display: grid;
+    grid-template-columns: 160px 2px 1fr;
+    gap: 0 32px;
+    padding-bottom: 48px;
+  }
+
+  .tl-marker {
+    text-align: right;
+    padding-top: 4px;
+  }
+
+  .tl-phase {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ember);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .tl-interactions {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .tl-line-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .tl-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--ember);
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .tl-connector {
+    flex: 1;
+    width: 2px;
+    background: var(--border);
+    margin-top: 4px;
+  }
+
+  .tl-item:last-child .tl-connector { display: none; }
+
+  .tl-content { padding-top: 2px; }
+
+  .tl-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    margin-bottom: 8px;
+  }
+
+  .tl-body {
+    color: var(--dim);
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 480px;
+  }
+
+  /* ── INSTALAÇÃO ── */
+  .os-tabs {
+    display: flex;
+    gap: 4px;
+    margin-top: 48px;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .os-tab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    padding: 10px 20px;
+    cursor: pointer;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.2s, border-color 0.2s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+
+  .os-tab:hover { color: var(--text); }
+  .os-tab.active { color: var(--ember); border-bottom-color: var(--ember); }
+
+  .os-panel {
+    display: none;
+    padding-top: 32px;
+  }
+
+  .os-panel.active { display: block; }
+
+  .code-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .code-header {
+    background: var(--surface2);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  .copy-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.06em;
+  }
+
+  .copy-btn:hover { color: var(--ember); border-color: var(--ember); }
+
+  .code-body {
+    padding: 20px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text);
+    overflow-x: auto;
+  }
+
+  .code-body .comment { color: var(--muted); }
+  .code-body .cmd { color: #7ECFFF; }
+  .code-body .str { color: #A8FF78; }
+  .code-body .kw { color: var(--ember); }
+
+  .install-step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 32px;
+  }
+
+  .install-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
+    font-size: 32px;
+    color: var(--ember);
+    line-height: 1;
+    flex-shrink: 0;
+    width: 40px;
+  }
+
+  .install-info h4 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+
+  .install-info p {
+    color: var(--dim);
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  /* ── COMPARATIVO ── */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 48px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  .compare-table th {
+    padding: 14px 20px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+
+  .compare-table th.highlight { color: var(--ember); }
+
+  .compare-table td {
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(42,42,42,0.5);
+    color: var(--dim);
+    vertical-align: middle;
+  }
+
+  .compare-table td.feature { color: var(--text); font-size: 14px; }
+  .compare-table td.yes { color: #6EC98A; }
+  .compare-table td.no { color: var(--muted); }
+  .compare-table td.forge-col { color: var(--ember); }
+  .compare-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ── CTA FINAL ── */
+  .cta-section {
+    text-align: center;
+    padding: 140px 48px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 300px;
+    background: radial-gradient(ellipse, rgba(255,69,0,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cta-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+  }
+
+  .cta-body {
+    color: var(--dim);
+    font-size: 18px;
+    max-width: 480px;
+    margin: 0 auto 48px;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 14px 32px;
+    background: var(--ember);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-primary:hover {
+    background: var(--ember2);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 14px 32px;
+    background: transparent;
+    color: var(--dim);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    letter-spacing: 0.04em;
+  }
+
+  .btn-secondary:hover {
+    color: var(--text);
+    border-color: var(--dim);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 32px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--ember);
+    letter-spacing: 0.12em;
+  }
+
+  .footer-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  /* ── DIVISOR DE SEÇÃO ── */
+  .section-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    section { padding: 80px 24px; }
+    .hero { padding: 100px 24px 60px; }
+    .origin-grid { grid-template-columns: 1fr; }
+    .adaptive-grid { grid-template-columns: 1fr; }
+    .tl-item { grid-template-columns: 100px 2px 1fr; gap: 0 16px; }
+    .tl-marker { display: none; }
+    .tl-item { grid-template-columns: 2px 1fr; }
+    footer { flex-direction: column; gap: 12px; text-align: center; }
+    .compare-table { font-size: 11px; }
+    .compare-table td, .compare-table th { padding: 10px 12px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+    .reveal { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="sparks-canvas"></canvas>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-logo">FORGE</span>
+  <ul class="nav-links">
+    <li><a href="#origin">Origem</a></li>
+    <li><a href="#how">Como funciona</a></li>
+    <li><a href="#learn">Aprendizado</a></li>
+    <li><a href="#install">Instalar</a></li>
+    <li><a href="#compare">Comparativo</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <span class="hero-eyebrow">Open Source · Local · Rust · Free</span>
+  <h1 class="hero-title">
+    Você pensa.<br>
+    <span class="ember">Forge</span> traduz.<br>
+    A IA constrói.
+  </h1>
+  <p class="hero-sub">
+    O engenheiro de prompt que roda na sua máquina, aprende com você e entrega para qualquer IA o briefing perfeito — de uma palavra só.
+  </p>
+
+  <div class="live-terminal">
+    <div class="terminal-bar">
+      <div class="dot dot-r"></div>
+      <div class="dot dot-y"></div>
+      <div class="dot dot-g"></div>
+      <span class="terminal-label">forge — ao vivo</span>
+    </div>
+    <div class="terminal-body">
+
+      <div class="t-row">
+        <span class="t-label you">você</span>
+        <span class="t-text input-raw">me surpreenda</span>
+      </div>
+
+      <div class="t-pipe">
+        <div class="pipe-item">Intenção detectada: <span>Creative / Ambiguidade Zero</span></div>
+        <div class="pipe-item">Perfil do usuário: <span>dev sênior · Linux · 22h · Rust recente</span></div>
+        <div class="pipe-item">Direção escolhida: <span>Código criativo e inesperado</span></div>
+        <div class="pipe-item">Técnica: <span>Role + Chain-of-thought + Structured output</span></div>
+        <div class="pipe-item">Tempo Forge: <span>0.8ms</span></div>
+      </div>
+
+      <div class="t-divider"></div>
+
+      <div class="t-row">
+        <span class="t-label forge">forge</span>
+        <span class="t-text">
+          Você é um engenheiro de sistemas criativo. Crie um visualizador de estrutura de arquivos como arte generativa ASCII em tempo real para o terminal. Deve usar Rust + crossterm. Cada pasta é uma ramificação viva, arquivos pulsam com base no tamanho. Inclua cores por tipo de arquivo, animação de scroll suave, e modo "heartbeat" que mostra atividade recente. Entregue o código completo, comentado em PT-BR, pronto para rodar com <span style="color:var(--ember)">cargo run</span>.
+        </span>
+      </div>
+
+      <div class="t-divider"></div>
+
+      <div class="t-row">
+        <span class="t-label ai">claude</span>
+        <span class="t-text typing">Gerando visualizador ASCII com animação em tempo real</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ORIGEM -->
+<section id="origin">
+  <span class="section-label reveal">A origem</span>
+  <h2 class="section-title reveal">Nasceu de uma frustração<br>que todo dev conhece.</h2>
+
+  <div class="origin-grid">
+    <div class="origin-text reveal">
+      <p>
+        IAs como Claude, GPT e Gemini são extraordinárias. Mas elas respondem ao que você diz — não ao que você quer dizer. Um prompt vago gera uma resposta vaga. Um prompt de engenheiro sênior gera um resultado profissional.
+      </p>
+      <p>
+        O problema: <strong>prompt engineering é uma habilidade</strong>. Levou anos para ser desenvolvida. E o resultado fica na cabeça de quem aprendeu — não na ferramenta.
+      </p>
+      <p>
+        Forge nasceu de uma pergunta simples: <strong>e se o conhecimento de prompt engineering ficasse na máquina, aprendesse com o usuário, e fosse aplicado automaticamente para qualquer IA — sem custo, sem nuvem, sem fricção?</strong>
+      </p>
+      <p>
+        Escrito em Rust porque velocidade e eficiência de memória importam quando você processa cada mensagem antes de enviar. O pipeline inteiro roda em menos de 1ms. O resto do tempo é latência de rede — não de Forge.
+      </p>
+    </div>
+    <div class="origin-stat-block reveal">
+      <div class="stat-card">
+        <div class="stat-number">&lt;1ms</div>
+        <div class="stat-desc">Tempo do pipeline completo de engenharia</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">~8MB</div>
+        <div class="stat-desc">RAM consumida em idle — sem Electron, sem Node</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">88%</div>
+        <div class="stat-desc">Taxa de acerto na primeira resposta após calibração</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">0</div>
+        <div class="stat-desc">Dados enviados para nuvem. Tudo roda local.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- COMO FUNCIONA -->
+<section id="how">
+  <span class="section-label reveal">Como funciona</span>
+  <h2 class="section-title reveal">8 estágios. Menos de 1ms.<br>Prompt de engenheiro sênior.</h2>
+  <p class="section-body reveal">
+    Cada mensagem que você digita passa por um pipeline determinístico antes de chegar em qualquer IA. Nenhuma chamada de rede. Nenhum modelo local pesado. Só algoritmos em Rust.
+  </p>
+
+  <div class="pipeline-wrapper">
+
+    <div class="pipe-stage reveal">
+      <div class="pipe-line"></div>
+      <div class="pipe-node">1</div>
+      <div class="pipe-content">
+        <div class="pipe-name">Intent Detector</div>
+        <div class="pipe-desc">Analisa seu input com scoring de keywords, regex e dicionários em PT-BR e EN. Detecta a intenção primária, o domínio (web, código, jurídico, marketing...) e o sub-domínio específico. Sem modelo de linguagem — pura lógica Rust.</div>
+        <div class="pipe-time">~0.1ms</div>
+      </div>
+    </div>
+
+    <div class="pipe-stage reveal">
+      <div class="pipe-line"></div>
+      <div class="pipe-node">2</div>
+      <div class="pipe-content">
+        <div class="pipe-name">Ambiguity Resolver</div>
+        <div class="pipe-desc">Classifica o nível de ambiguidade: Zero (me surpreenda), Baixa (algo criativo sobre X), Resolvível (compara o vídeo com o PDF), ou Nenhuma (intenção clara). Cada nível tem uma rota diferente no pipeline.</div>
+        <div class="pipe-time">~0.1ms</div>
+      </div>
+    </div>
+
+    <div class="pipe-stage reveal">
+      <div class="pipe-line"></div>
+      <div class="pipe-node">3</div>
+      <div class="pipe-content">
+        <div class="pipe-name">Pattern Learner</div>
+        <div class="pipe-desc">Consulta o SQLite local com seu histórico de preferências por domínio. Já sabe sua stack, seu nível técnico, seu formato favorito de resposta. Esses dados enriquecem todos os estágios seguintes.</div>
+        <div class="pipe-time">~0.2ms</div>
+      </div>
+    </div>
+
+    <div class="pipe-stage reveal">
+      <div class="pipe-line"></div>
+      <div class="pipe-node">4</div>
+      <div class="pipe-content">
+        <div class="pipe-name">Domain Enricher</div>
+        <div class="pipe-desc">Carrega a knowledge base do domínio detectado — arquivos JSON com seções obrigatórias, compliance do setor, linguagem adequada, tech defaults. Um site jurídico recebe contexto OAB. Uma API REST recebe padrões de segurança.</div>
+        <div class="pipe-time">~0.3ms</div>
+      </div>
+    </div>
+
+    <div class="pipe-stage reveal">
+      <div class="pipe-line"></div>
+      <div class="pipe-node">5</div>
+      <div class="pipe-content">
+        <div class="pipe-name">Complexity Analyzer</div>
+        <div class="pipe-desc">Atribui um score de complexidade 0–100 com base na intenção, no domínio e no contexto. Score baixo: resposta direta. Score alto: pipeline de engenharia completo com role, contexto, constraints e formato explícito.</div>
+        <div class="pipe-time">~0.1ms</div>
+      </div>
+    </div>
+
+    <div class="pipe-stage reveal">
+      <div class="pipe-line"></div>
+      <div class="pipe-node">6</div>
+      <div class="pipe-content">
+        <div class="pipe-name">Technique Selector</div>
+        <div class="pipe-desc">Escolhe a técnica de prompting ideal: Direct, Structured, Role Playing, Few-Shot, Chain-of-Thought, Tree-of-Thought ou FullEngineered. A combinação é determinada pela complexidade e pelo tipo de tarefa — automaticamente.</div>
+        <div class="pipe-time">~0.1ms</div>
+      </div>
+    </div>
+
+    <div class="pipe-stage reveal">
+      <div class="pipe-line"></div>
+      <div class="pipe-node">7</div>
+      <div class="pipe-content">
+        <div class="pipe-name">Adaptive Param Injector</div>
+        <div class="pipe-desc">Injeta os parâmetros calibrados pelo seu histórico: temperature, max_tokens, style, formality, technical_depth. Esses valores evoluem com cada interação usando momentum e learning rate — nunca são fixos.</div>
+        <div class="pipe-time">~0.1ms</div>
+      </div>
+    </div>
+
+    <div class="pipe-stage reveal">
+      <div class="pipe-node">8</div>
+      <div class="pipe-content">
+        <div class="pipe-name">Prompt Assembler</div>
+        <div class="pipe-desc">Monta o prompt final com todos os elementos: role, context, task, constraints, format, examples (few-shot) e chain steps. O resultado é um briefing completo que qualquer IA recebe como se viesse de um engenheiro de prompt experiente.</div>
+        <div class="pipe-time">~0.1ms</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- APRENDIZADO ADAPTATIVO -->
+<section id="learn">
+  <span class="section-label reveal">Aprendizado adaptativo</span>
+  <h2 class="section-title reveal">Quanto mais você usa,<br>mais ele te conhece.</h2>
+  <p class="section-body reveal">
+    Forge não tem parâmetros fixos. Cada resposta que você aprova, cada vez que você pede "mais técnico" ou "mais curto", cada padrão no seu vocabulário — tudo ajusta o perfil silenciosamente.
+  </p>
+
+  <div class="adaptive-grid">
+    <div class="adaptive-card reveal">
+      <div class="adaptive-card-icon">⚡</div>
+      <div class="adaptive-card-title">Sinais implícitos</div>
+      <div class="adaptive-card-body">Forge observa: você copiou a resposta inteira? Fez follow-up imediato? Reformulou a pergunta? Cada comportamento é um sinal de ajuste sem você precisar fazer nada.</div>
+    </div>
+    <div class="adaptive-card reveal">
+      <div class="adaptive-card-icon">🎚️</div>
+      <div class="adaptive-card-title">Sinais explícitos</div>
+      <div class="adaptive-card-body">Um 👍 ou 👎 na resposta. "Mais detalhado". "Mais direto". "Mais técnico". Esses pedidos ajustam parâmetros reais — temperature, max_tokens, technical_depth — com momentum para evitar oscilação.</div>
+    </div>
+    <div class="adaptive-card reveal">
+      <div class="adaptive-card-icon">🧬</div>
+      <div class="adaptive-card-title">Perfis por domínio</div>
+      <div class="adaptive-card-body">Seu perfil de código é diferente do seu perfil de texto criativo. Forge mantém configurações separadas por domínio — você em modo técnico é diferente de você em modo criativo.</div>
+    </div>
+  </div>
+
+  <div class="timeline">
+    <div class="tl-item reveal">
+      <div class="tl-marker">
+        <div class="tl-phase">Fase 1</div>
+        <div class="tl-interactions">1–10 interações</div>
+      </div>
+      <div class="tl-line-col"><div class="tl-dot"></div><div class="tl-connector"></div></div>
+      <div class="tl-content">
+        <div class="tl-title">Observação</div>
+        <div class="tl-body">Forge usa defaults conservadores e coleta sinais sem agir muito. Confidence: 0.1–0.3. Já detecta: você usa jargão técnico avançado? TypeScript em todo projeto? Prefere bullet points?</div>
+      </div>
+    </div>
+    <div class="tl-item reveal">
+      <div class="tl-marker">
+        <div class="tl-phase">Fase 2</div>
+        <div class="tl-interactions">10–30 interações</div>
+      </div>
+      <div class="tl-line-col"><div class="tl-dot"></div><div class="tl-connector"></div></div>
+      <div class="tl-content">
+        <div class="tl-title">Calibração</div>
+        <div class="tl-body">Forge começa a personalizar ativamente. Confidence: 0.3–0.6. Você sempre copia o código sem editar → format: code_first confirmado. Você nunca lê introduções → remove_preamble: true.</div>
+      </div>
+    </div>
+    <div class="tl-item reveal">
+      <div class="tl-marker">
+        <div class="tl-phase">Fase 3</div>
+        <div class="tl-interactions">30–100 interações</div>
+      </div>
+      <div class="tl-line-col"><div class="tl-dot"></div><div class="tl-connector"></div></div>
+      <div class="tl-content">
+        <div class="tl-title">Identidade</div>
+        <div class="tl-body">Forge conhece você melhor do que qualquer ferramenta. Confidence: 0.6–0.9. O system prompt gerado automaticamente já cita seu nível de expertise, sua stack, seu estilo de resposta preferido.</div>
+      </div>
+    </div>
+    <div class="tl-item reveal">
+      <div class="tl-marker">
+        <div class="tl-phase">Fase 4</div>
+        <div class="tl-interactions">100+ interações</div>
+      </div>
+      <div class="tl-line-col"><div class="tl-dot"></div><div class="tl-connector"></div></div>
+      <div class="tl-content">
+        <div class="tl-title">Refinamento contínuo</div>
+        <div class="tl-body">Micro-ajustes por domínio. Confidence: 0.9+. Uma palavra sua gera um briefing de engenheiro sênior. Nenhuma outra ferramenta chega aqui — porque todas resetam o contexto. Forge não reseta nunca.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- INSTALAÇÃO -->
+<section id="install">
+  <span class="section-label reveal">Instalação</span>
+  <h2 class="section-title reveal">Roda em qualquer máquina.<br>Sem conta. Sem nuvem.</h2>
+  <p class="section-body reveal">
+    Escolha seu sistema operacional. Forge compila para um binário único e serve o frontend local em <code style="font-family:'JetBrains Mono',monospace;color:var(--ember);font-size:15px">localhost:3000</code>.
+  </p>
+
+  <div class="os-tabs reveal">
+    <button class="os-tab active" onclick="showOS('linux')">🐧 Linux</button>
+    <button class="os-tab" onclick="showOS('wsl')">🔧 WSL2</button>
+    <button class="os-tab" onclick="showOS('mac')">🍎 macOS</button>
+    <button class="os-tab" onclick="showOS('win')">🪟 Windows</button>
+    <button class="os-tab" onclick="showOS('docker')">🐳 Docker</button>
+  </div>
+
+  <!-- LINUX -->
+  <div id="os-linux" class="os-panel active">
+    <div class="install-step">
+      <div class="install-num">1</div>
+      <div class="install-info">
+        <h4>Instalar Rust</h4>
+        <p>Toolchain oficial — um comando, funciona em Ubuntu, Debian, Fedora, Arch.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-title">terminal</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
+          <div class="code-body"><span class="cmd">curl</span> --proto <span class="str">'=https'</span> --tlsv1.2 -sSf https://sh.rustup.rs | sh
+<span class="cmd">source</span> <span class="str">"$HOME/.cargo/env"</span>
+rustc --version</div>
+        </div>
+      </div>
+    </div>
+    <div class="install-step">
+      <div class="install-num">2</div>
+      <div class="install-info">
+        <h4>Dependências do sistema</h4>
+        <p>Build tools, OpenSSL e SQLite.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-title">terminal</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
+          <div class="code-body">sudo apt update && sudo apt install -y \
+  build-essential pkg-config \
+  libssl-dev libsqlite3-dev git curl</div>
+        </div>
+      </div>
+    </div>
+    <div class="install-step">
+      <div class="install-num">3</div>
+      <div class="install-info">
+        <h4>Clonar e rodar</h4>
+        <p>Build leva 3–5 min na primeira vez. Após isso, &lt;10s.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-title">terminal</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
+          <div class="code-body">git clone https://github.com/seu-usuario/forge.git
+<span class="cmd">cd</span> forge
+cp .env.example .env <span class="comment"># configure sua API key</span>
+cargo build --release
+./target/release/forge
+<span class="comment"># Abra: http://localhost:3000</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WSL2 -->
+  <div id="os-wsl" class="os-panel">
+    <div class="install-step">
+      <div class="install-num">1</div>
+      <div class="install-info">
+        <h4>Ativar WSL2 (PowerShell como Admin)</h4>
+        <p>Se ainda não tem WSL2 instalado no Windows.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-title">powershell (admin)</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
+          <div class="code-body">wsl --install -d Ubuntu-22.04
+wsl --set-default-version 2</div>
+        </div>
+      </div>
+    </div>
+    <div class="install-step">
+      <div class="install-num">2</div>
+      <div class="install-info">
+        <h4>Dentro do terminal WSL2</h4>
+        <p>Siga exatamente os mesmos passos do Linux acima. O WSL2 expõe localhost automaticamente para o Windows.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-title">wsl2 terminal</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
+          <div class="code-body"><span class="comment"># Cole os comandos da aba Linux aqui</span>
+<span class="comment"># Acesse no browser Windows: http://localhost:3000</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MACOS -->
+  <div id="os-mac" class="os-panel">
+    <div class="install-step">
+      <div class="install-num">1</div>
+      <div class="install-info">
+        <h4>Xcode Tools + Homebrew</h4>
+        <p>Necessário para compilar dependências nativas. Funciona em Intel e Apple Silicon (M1/M2/M3).</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-title">terminal</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
+          <div class="code-body">xcode-select --install
+/bin/bash -c <span class="str">"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</span>
+brew install openssl pkg-config sqlite</div>
+        </div>
+      </div>
+    </div>
+    <div class="install-step">
+      <div class="install-num">2</div>
+      <div class="install-info">
+        <h4>Rust + variáveis Apple Silicon</h4>
+        <div class="code-block">
+          <div class="code-header"><span class="code-title">terminal</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
+          <div class="code-body">curl --proto <span class="str">'=https'</span> --tlsv1.2 -sSf https://sh.rustup.rs | sh
+<span class="comment"># Apple Silicon — adicione ao ~/.zshrc:</span>
+export OPENSSL_DIR=$(brew --prefix openssl)
+export PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig"</div>
+        </div>
+      </div>
+    </div>
+    <div class="install-step">
+      <div class="install-num">3</div>
+      <div class="install-info">
+        <h4>Clonar e rodar</h4>
+        <div class="code-block">
+          <div class="code-header"><span class="code-title">terminal</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
+          <div class="code-body">git clone https://github.com/seu-usuario/forge.git
+<span class="cmd">cd</span> forge && cp .env.example .env
+cargo build --release && ./target/release/forge</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WINDOWS -->
+  <div id="os-win" class="os-panel">
+    <div class="install-step">
+      <div class="install-num">1</div>
+      <div class="install-info">
+        <h4>Build Tools + Rust</h4>
+        <p>Necessário o Visual Studio Build Tools para compilar código nativo.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-title">powershell</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
+          <div class="code-body"><span class="comment"># 1. Instale Visual C++ Build Tools:</span>
+<span class="comment"># https://visualstudio.microsoft.com/visual-cpp-build-tools/</span>
+<span class="comment"># Selecione: "Desktop development with C++"</span>
+
+<span class="comment"># 2. Instale Rust:</span>
+winget install Rustlang.Rustup</div>
+        </div>
+      </div>
+    </div>
+    <div class="install-step">
+      <div class="install-num">2</div>
+      <div class="install-info">
+        <h4>Clonar e compilar</h4>
+        <div class="code-block">
+          <div class="code-header"><span class="code-title">powershell</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
+          <div class="code-body">git clone https://github.com/seu-usuario/forge.git
+cd forge
+copy .env.example .env
+cargo build --release
+.\target\release\forge.exe</div>
+        </div>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:12px;margin-top:16px">
+      💡 Recomendamos WSL2 no Windows para melhor compatibilidade.
+    </p>
+  </div>
+
+  <!-- DOCKER -->
+  <div id="os-docker" class="os-panel">
+    <div class="install-step">
+      <div class="install-num">1</div>
+      <div class="install-info">
+        <h4>Docker Compose — funciona em qualquer OS</h4>
+        <p>A forma mais rápida de rodar. Não precisa instalar Rust.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-title">terminal</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
+          <div class="code-body">git clone https://github.com/seu-usuario/forge.git
+<span class="cmd">cd</span> forge
+cp .env.example .env <span class="comment"># configure sua API key</span>
+docker compose up -d
+<span class="comment"># Abra: http://localhost:3000</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- COMPARATIVO -->
+<section id="compare">
+  <span class="section-label reveal">Comparativo</span>
+  <h2 class="section-title reveal">Por que Forge é diferente<br>de tudo que existe.</h2>
+
+  <table class="compare-table reveal">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>ChatGPT</th>
+        <th>Claude.ai</th>
+        <th>Cursor</th>
+        <th>LangChain</th>
+        <th class="highlight">FORGE</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="feature">Prompt engineering automático</td>
+        <td class="no">—</td>
+        <td class="no">—</td>
+        <td class="yes">só código</td>
+        <td class="no">—</td>
+        <td class="forge-col yes">qualquer domínio</td>
+      </tr>
+      <tr>
+        <td class="feature">Aprende seu perfil</td>
+        <td class="no">—</td>
+        <td class="no">—</td>
+        <td class="yes">parcial</td>
+        <td class="no">—</td>
+        <td class="forge-col yes">✓ adaptativo</td>
+      </tr>
+      <tr>
+        <td class="feature">Parâmetros que evoluem</td>
+        <td class="no">—</td>
+        <td class="no">—</td>
+        <td class="no">—</td>
+        <td class="no">—</td>
+        <td class="forge-col yes">✓ momentum</td>
+      </tr>
+      <tr>
+        <td class="feature">Roda 100% local</td>
+        <td class="no">—</td>
+        <td class="no">—</td>
+        <td class="no">—</td>
+        <td class="yes">parcial</td>
+        <td class="forge-col yes">✓ offline</td>
+      </tr>
+      <tr>
+        <td class="feature">Suporte multimodal</td>
+        <td class="yes">✓</td>
+        <td class="yes">✓</td>
+        <td class="no">—</td>
+        <td class="yes">✓</td>
+        <td class="forge-col yes">✓ orquestrado</td>
+      </tr>
+      <tr>
+        <td class="feature">Qualquer IA (multi-provider)</td>
+        <td class="no">—</td>
+        <td class="no">—</td>
+        <td class="yes">parcial</td>
+        <td class="yes">✓</td>
+        <td class="forge-col yes">✓</td>
+      </tr>
+      <tr>
+        <td class="feature">Resolve "me surpreenda"</td>
+        <td class="yes">na IA</td>
+        <td class="yes">na IA</td>
+        <td class="no">—</td>
+        <td class="no">—</td>
+        <td class="forge-col yes">✓ antes da IA</td>
+      </tr>
+      <tr>
+        <td class="feature">RAM idle</td>
+        <td class="no">browser</td>
+        <td class="no">browser</td>
+        <td class="no">~400MB</td>
+        <td class="no">~200MB</td>
+        <td class="forge-col yes">~8MB</td>
+      </tr>
+      <tr>
+        <td class="feature">Gratuito e open source</td>
+        <td class="no">pago</td>
+        <td class="no">pago</td>
+        <td class="no">pago</td>
+        <td class="yes">✓</td>
+        <td class="forge-col yes">✓ MIT</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="cta-glow"></div>
+  <h2 class="cta-title reveal">
+    Você pensa.<br>
+    <span style="color:var(--ember)">Forge</span> forja.<br>
+    A IA entrega.
+  </h2>
+  <p class="cta-body reveal">
+    Open source, local, gratuito. Nenhum dado seu sai da máquina. Começa com uma linha de código.
+  </p>
+  <div class="cta-buttons reveal">
+    <a href="#install" class="btn-primary">Instalar agora</a>
+    <a href="https://github.com/seu-usuario/forge" class="btn-secondary">Ver no GitHub →</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-logo">FORGE</span>
+  <span class="footer-text">MIT License · Feito com Rust · Roda na sua máquina</span>
+  <span class="footer-text">github.com/seu-usuario/forge</span>
+</footer>
+
+<script>
+/* ── FAÍSCAS ── */
+const canvas = document.getElementById('sparks-canvas');
+const ctx = canvas.getContext('2d');
+let sparks = [];
+let W, H;
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+function randomSpark() {
+  return {
+    x: Math.random() * W,
+    y: H + 10,
+    vx: (Math.random() - 0.5) * 1.5,
+    vy: -(Math.random() * 2 + 1),
+    life: 1,
+    decay: Math.random() * 0.008 + 0.004,
+    size: Math.random() * 1.5 + 0.5,
+    color: Math.random() > 0.6 ? '#FF4500' : Math.random() > 0.5 ? '#FF6B35' : '#FFB347',
+  };
+}
+
+function animateSparks() {
+  ctx.clearRect(0, 0, W, H);
+
+  if (Math.random() < 0.3) sparks.push(randomSpark());
+  if (sparks.length > 120) sparks.splice(0, 10);
+
+  sparks = sparks.filter(s => s.life > 0);
+  sparks.forEach(s => {
+    s.x  += s.vx;
+    s.y  += s.vy;
+    s.vy += 0.02;
+    s.life -= s.decay;
+    ctx.globalAlpha = s.life * 0.6;
+    ctx.fillStyle = s.color;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  ctx.globalAlpha = 1;
+  requestAnimationFrame(animateSparks);
+}
+animateSparks();
+
+/* ── SCROLL REVEAL ── */
+const reveals = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 80);
+      io.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+reveals.forEach(r => io.observe(r));
+
+/* ── OS TABS ── */
+function showOS(os) {
+  document.querySelectorAll('.os-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.os-panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('os-' + os).classList.add('active');
+}
+
+/* ── COPY BUTTON ── */
+function copyCode(btn) {
+  const code = btn.closest('.code-block').querySelector('.code-body').innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'copiado!';
+    btn.style.color = '#6EC98A';
+    btn.style.borderColor = '#6EC98A';
+    setTimeout(() => {
+      btn.textContent = 'copiar';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 1800);
+  });
+}
+
+/* ── TYPING ANIMATION ── */
+const typingEl = document.querySelector('.typing');
+const phrases = [
+  'Gerando visualizador ASCII com animação em tempo real',
+  'Analisando PDF jurídico e extraindo cláusulas críticas',
+  'Criando API REST com autenticação JWT em Node.js',
+  'Fusionando duas imagens com transferência de estilo',
+  'Comparando vídeo e relatório para montar apresentação',
+];
+let phraseIdx = 0, charIdx = 0, deleting = false;
+
+function typeLoop() {
+  if (!typingEl) return;
+  const phrase = phrases[phraseIdx];
+  if (!deleting) {
+    typingEl.textContent = phrase.slice(0, charIdx++);
+    if (charIdx > phrase.length) { deleting = true; setTimeout(typeLoop, 1800); return; }
+  } else {
+    typingEl.textContent = phrase.slice(0, charIdx--);
+    if (charIdx < 0) {
+      deleting = false;
+      phraseIdx = (phraseIdx + 1) % phrases.length;
+      charIdx = 0;
+      setTimeout(typeLoop, 400);
+      return;
+    }
+  }
+  setTimeout(typeLoop, deleting ? 28 : 48);
+}
+setTimeout(typeLoop, 2000);
+</script>
+</body>
+</html>
