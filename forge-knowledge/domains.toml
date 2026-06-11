@@ -1,0 +1,11 @@
+[[domain]]
+name = "juridico"
+triggers = ["advocacia", "advogado", "juridico", "lei", "contrato"]
+keywords = ["credibilidade", "areas de atuacao", "captacao etica", "oab"]
+constraints = ["evitar promessa de resultado", "usar linguagem sobria"]
+
+[[domain]]
+name = "tecnologia"
+triggers = ["software", "app", "api", "sistema", "saas"]
+keywords = ["arquitetura", "seguranca", "escalabilidade"]
+constraints = ["explicitar requisitos", "priorizar manutencao"]
