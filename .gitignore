@@ -2,6 +2,7 @@
 **/*.rs.bk
 .env
 .env.local
+forge.sqlite
 .DS_Store
 .idea/
 .vscode/

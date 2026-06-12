@@ -1,3 +1,5 @@
+pub mod inbound;
+
 use forge_core::{DomainRule, KnowledgeBase};
 use serde::Serialize;
 

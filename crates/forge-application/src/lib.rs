@@ -1,5 +1,8 @@
-use forge_core::{EngineerRequest, EngineerResponse, PromptPipeline};
+pub mod services;
+
+use forge_core::{EngineerRequest, EngineerResponse, ExpertiseLevel, PromptPipeline};
 use serde::Serialize;
+use services::media_prompt_builder::MediaPromptBuilder;
 use std::collections::{BTreeMap, VecDeque};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -30,10 +33,42 @@ pub struct EngineStats {
     pub last_request_at_unix: Option<u64>,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct ProfileResponse {
+    pub expertise_level: String,
+    pub expertise_label: String,
+    pub prompt_modifier_preview: String,
+    pub temperature_adjustment: f32,
+    pub max_tokens_adjustment: i32,
+    pub domain: String,
+    pub interaction_count: u32,
+    pub confidence: f32,
+}
+
+#[derive(Debug, Clone)]
+struct ProfileState {
+    expertise: ExpertiseLevel,
+    domain: String,
+    interaction_count: u32,
+    confidence: f32,
+}
+
+impl Default for ProfileState {
+    fn default() -> Self {
+        Self {
+            expertise: ExpertiseLevel::default(),
+            domain: "all".to_string(),
+            interaction_count: 0,
+            confidence: 0.1,
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct ApplicationEngine {
     pipeline: PromptPipeline,
     history: Arc<Mutex<VecDeque<HistoryItem>>>,
+    profile: Arc<Mutex<ProfileState>>,
     sequence: Arc<AtomicU64>,
 }
 
@@ -42,14 +77,41 @@ impl ApplicationEngine {
         Self {
             pipeline,
             history: Arc::new(Mutex::new(VecDeque::with_capacity(DEFAULT_HISTORY_LIMIT))),
+            profile: Arc::new(Mutex::new(ProfileState::default())),
             sequence: Arc::new(AtomicU64::new(1)),
         }
     }
 
     pub fn engineer(&self, request: EngineerRequest) -> EngineerResponse {
-        let response = self.pipeline.engineer(request);
+        let expertise = self
+            .profile
+            .lock()
+            .expect("profile mutex poisoned")
+            .expertise
+            .clone();
+        let media_prompt =
+            MediaPromptBuilder::detect_media_intent(&request.input).map(|media_type| {
+                MediaPromptBuilder::build(&request.input, &media_type, &expertise, None)
+            });
+        let response = self
+            .pipeline
+            .engineer_with_expertise(request, expertise, media_prompt);
         self.record(&response);
         response
+    }
+
+    pub fn profile(&self) -> ProfileResponse {
+        let profile = self.profile.lock().expect("profile mutex poisoned");
+        profile_response(&profile)
+    }
+
+    pub fn update_profile(&self, expertise_level: &str, domain: Option<String>) -> ProfileResponse {
+        let mut profile = self.profile.lock().expect("profile mutex poisoned");
+        profile.expertise = ExpertiseLevel::from_str(expertise_level);
+        profile.domain = domain
+            .filter(|domain| !domain.trim().is_empty())
+            .unwrap_or_else(|| "all".to_string());
+        profile_response(&profile)
     }
 
     pub fn history(&self, limit: usize) -> Vec<HistoryItem> {
@@ -112,6 +174,26 @@ impl ApplicationEngine {
             history.pop_front();
         }
         history.push_back(item);
+
+        let mut profile = self.profile.lock().expect("profile mutex poisoned");
+        profile.interaction_count = profile.interaction_count.saturating_add(1);
+        profile.confidence = (profile.confidence + 0.02).min(0.9);
+    }
+}
+
+fn profile_response(profile: &ProfileState) -> ProfileResponse {
+    let modifier = profile.expertise.prompt_modifier();
+    let prompt_modifier_preview = modifier.chars().take(100).collect();
+
+    ProfileResponse {
+        expertise_level: profile.expertise.as_config_value().to_string(),
+        expertise_label: profile.expertise.label().to_string(),
+        prompt_modifier_preview,
+        temperature_adjustment: profile.expertise.temperature_modifier(),
+        max_tokens_adjustment: profile.expertise.max_tokens_modifier(),
+        domain: profile.domain.clone(),
+        interaction_count: profile.interaction_count,
+        confidence: profile.confidence,
     }
 }
 
@@ -139,5 +221,27 @@ mod tests {
         assert_eq!(stats.total_requests, 1);
         assert_eq!(stats.by_domain.get("juridico"), Some(&1));
         assert_eq!(app.history(20).len(), 1);
+    }
+
+    #[test]
+    fn updates_profile_expertise() {
+        let app = ApplicationEngine::new(PromptPipeline::default());
+        let profile = app.update_profile("especialista", Some("all".to_string()));
+
+        assert_eq!(profile.expertise_level, "Especialista");
+        assert_eq!(profile.max_tokens_adjustment, 1000);
+    }
+
+    #[test]
+    fn media_prompt_uses_current_expertise() {
+        let app = ApplicationEngine::new(PromptPipeline::default());
+        app.update_profile("especialista", Some("all".to_string()));
+        let response = app.engineer(EngineerRequest {
+            input: "faz um logo para minha empresa".to_string(),
+            provider: Some("claude".to_string()),
+        });
+
+        assert!(response.prompt.contains("Briefing técnico de design"));
+        assert_eq!(response.parameters.expertise_level, "Especialista");
     }
 }

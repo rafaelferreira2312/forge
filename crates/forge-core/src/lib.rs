@@ -1,3 +1,7 @@
+pub mod domain;
+
+pub use domain::value_objects::{ExpertiseLevel, KnowledgeLevel, MediaOutputType, UserArea};
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize)]
@@ -61,6 +65,7 @@ pub struct AdaptiveParameters {
     pub max_tokens: u32,
     pub style: String,
     pub provider: String,
+    pub expertise_level: String,
 }
 
 #[derive(Debug, Clone)]
@@ -141,25 +146,29 @@ impl PromptPipeline {
     }
 
     pub fn engineer(&self, request: EngineerRequest) -> EngineerResponse {
+        self.engineer_with_expertise(request, ExpertiseLevel::default(), None)
+    }
+
+    pub fn engineer_with_expertise(
+        &self,
+        request: EngineerRequest,
+        expertise: ExpertiseLevel,
+        media_prompt: Option<String>,
+    ) -> EngineerResponse {
         let input = request.input.trim().to_string();
         let normalized = normalize(&input);
         let provider = request.provider.unwrap_or_else(|| "local".to_string());
         let intent = detect_intent(&normalized);
         let ambiguity = resolve_ambiguity(&input, &normalized, &intent);
-        let domain = enrich_domain(&self.knowledge, &normalized);
+        let domain = enrich_domain(&self.knowledge, &input, &normalized);
         let complexity = analyze_complexity(&input, &normalized, &ambiguity, &domain);
         let technique = select_technique(&intent, &complexity, &domain);
-        let parameters = inject_parameters(&provider, &intent, &complexity, &technique);
-        let prompt = assemble_prompt(
-            &input,
-            &provider,
-            &intent,
-            &ambiguity,
-            &domain,
-            &complexity,
-            &technique,
-            &parameters,
-        );
+        let parameters = inject_parameters(&provider, &intent, &complexity, &technique, &expertise);
+        let prompt = if let Some(media_prompt) = media_prompt {
+            assemble_media_prompt(&media_prompt, &domain, &expertise)
+        } else {
+            assemble_prompt(&input, &intent, &domain, &technique, &expertise)
+        };
 
         EngineerResponse {
             input,
@@ -193,7 +202,10 @@ fn normalize(input: &str) -> String {
 
 fn detect_intent(normalized: &str) -> IntentResult {
     let mut signals = Vec::new();
-    let (primary, confidence) = if contains_any(normalized, &["site", "pagina", "landing", "web"]) {
+    let (primary, confidence) = if is_creative_request(normalized) {
+        signals.push("creative_engine".to_string());
+        ("open_creative", 0.95)
+    } else if contains_any(normalized, &["site", "pagina", "landing", "web"]) {
         signals.push("web_presence".to_string());
         ("create_website", 0.88)
     } else if contains_any(normalized, &["app", "sistema", "api", "software"]) {
@@ -254,7 +266,7 @@ fn resolve_ambiguity(input: &str, normalized: &str, intent: &IntentResult) -> Am
     }
 }
 
-fn enrich_domain(knowledge: &KnowledgeBase, normalized: &str) -> DomainEnrichment {
+fn enrich_domain(knowledge: &KnowledgeBase, input: &str, normalized: &str) -> DomainEnrichment {
     if let Some(rule) = knowledge
         .domains
         .iter()
@@ -269,6 +281,19 @@ fn enrich_domain(knowledge: &KnowledgeBase, normalized: &str) -> DomainEnrichmen
                 .iter()
                 .map(|item| item.to_string())
                 .collect(),
+        };
+    }
+
+    if let Some((sector, audience, constraints, keywords)) = detect_sector(input) {
+        return DomainEnrichment {
+            domain: sector.to_string(),
+            keywords: keywords
+                .split(',')
+                .map(|item| item.trim().to_string())
+                .filter(|item| !item.is_empty())
+                .collect(),
+            audience: audience.to_string(),
+            constraints: constraints.iter().map(|item| item.to_string()).collect(),
         };
     }
 
@@ -334,7 +359,12 @@ fn select_technique(
     complexity: &ComplexityAnalysis,
     domain: &DomainEnrichment,
 ) -> TechniqueSelection {
-    let (technique, rationale) = if complexity.level == "alta" {
+    let (technique, rationale) = if intent.primary == "open_creative" {
+        (
+            "creative_engine",
+            "transforma pedido aberto em uma entrega criativa completa sem pedir confirmacao",
+        )
+    } else if complexity.level == "alta" {
         (
             "structured_decomposition",
             "divide o problema em objetivo, contexto, restricoes, entregaveis e criterios de aceite",
@@ -367,14 +397,25 @@ fn inject_parameters(
     intent: &IntentResult,
     complexity: &ComplexityAnalysis,
     technique: &TechniqueSelection,
+    expertise: &ExpertiseLevel,
 ) -> AdaptiveParameters {
-    let creative_intent = matches!(intent.primary.as_str(), "create_website" | "write_content");
-    let temperature = if creative_intent { 0.72 } else { 0.35 };
-    let max_tokens = match complexity.level.as_str() {
+    let creative_intent = matches!(
+        intent.primary.as_str(),
+        "create_website" | "write_content" | "open_creative"
+    );
+    let base_temperature = if creative_intent { 0.72 } else { 0.35 };
+    let base_max_tokens = match complexity.level.as_str() {
         "alta" => 2400,
         "media" => 1600,
         _ => 900,
     };
+    let temperature = if intent.primary == "open_creative" {
+        0.92
+    } else {
+        (base_temperature + expertise.temperature_modifier()).clamp(0.0, 1.0)
+    };
+    let max_tokens =
+        (base_max_tokens as i32 + expertise.max_tokens_modifier()).clamp(256, 6000) as u32;
     let style = if technique.technique == "structured_decomposition" {
         "estruturado e consultivo"
     } else {
@@ -386,35 +427,357 @@ fn inject_parameters(
         max_tokens,
         style: style.to_string(),
         provider: provider.to_string(),
+        expertise_level: expertise.as_config_value().to_string(),
     }
 }
 
 fn assemble_prompt(
     input: &str,
-    provider: &str,
     intent: &IntentResult,
-    ambiguity: &AmbiguityResolution,
     domain: &DomainEnrichment,
-    complexity: &ComplexityAnalysis,
     technique: &TechniqueSelection,
-    parameters: &AdaptiveParameters,
+    expertise: &ExpertiseLevel,
+) -> String {
+    assemble_executable_prompt(
+        input,
+        &intent.primary,
+        &domain.domain,
+        &domain.audience,
+        &domain.constraints,
+        &technique.technique,
+        expertise.role_prefix(),
+        expertise.prompt_modifier(),
+    )
+}
+
+pub fn assemble_executable_prompt(
+    original_input: &str,
+    intent: &str,
+    domain: &str,
+    audience: &str,
+    constraints: &[String],
+    _technique: &str,
+    expertise_role: &str,
+    expertise_modifier: &str,
+) -> String {
+    let constraints_text = if constraints.is_empty() {
+        String::new()
+    } else {
+        format!(
+            "\n\nRESTRIÇÕES DO DOMÍNIO:\n{}",
+            constraints
+                .iter()
+                .map(|constraint| format!("- {}", constraint))
+                .collect::<Vec<_>>()
+                .join("\n")
+        )
+    };
+
+    match intent {
+        "create_website" => format!(
+            "{expertise_role}\n\nCrie um site completo para: {original_input}\n\nDOMÍNIO: {domain} | PÚBLICO: {audience}\n\nENTREGUE OBRIGATORIAMENTE:\n1. Estrutura de arquivos do projeto\n2. HTML semântico completo (todas as páginas)\n3. CSS moderno responsivo (mobile-first)\n4. JavaScript funcional (formulários, interações)\n5. README com instruções de deploy\n\nSEÇÕES MÍNIMAS DO SITE:\n- Hero com headline clara e CTA principal\n- Sobre / Quem somos\n- Serviços / O que oferecemos\n- Depoimentos ou casos de sucesso\n- Contato com formulário funcional\n- Footer com informações essenciais\n\nPADRÕES TÉCNICOS:\n- HTML5 semântico\n- CSS: variáveis, flexbox/grid, responsivo\n- SEO: meta tags, Open Graph, schema.org adequado ao setor\n- Performance: lazy loading, fontes otimizadas\n- Acessibilidade: WCAG 2.1 AA, foco visível, alt texts{constraints_text}\n\n{expertise_modifier}"
+        ),
+
+        "build_software" => format!(
+            "{expertise_role}\n\nDesenvolva o seguinte sistema: {original_input}\n\nDOMÍNIO: {domain} | PÚBLICO: {audience}\n\nENTREGUE OBRIGATORIAMENTE:\n1. Estrutura de pastas do projeto\n2. Código funcional de todos os módulos principais\n3. Tratamento de erros em todos os fluxos críticos\n4. Validação de inputs\n5. README com instalação, configuração e uso\n6. Exemplos de uso reais{constraints_text}\n\n{expertise_modifier}"
+        ),
+
+        "open_creative" => format!(
+            "{expertise_role}\n\nO usuário pediu para ser surpreendido. Escolha UMA das opções abaixo e execute completamente, sem pedir confirmação:\n\nA) Crie algo funcional e inesperado em código\n   (ferramenta CLI, visualizador, gerador, jogo no terminal)\n\nB) Escreva uma análise criativa de um tema cotidiano\n   sob uma perspectiva completamente inesperada\n\nC) Proponha e detalhe um produto/serviço fictício\n   que resolve um problema que as pessoas nem sabem que têm\n\nREGRAS:\n- Escolha a opção mais inesperada e útil\n- Execute completamente — não descreva, entregue\n- Máxima criatividade, mínimo de genericidade\n- Não explique sua escolha antes de executar\n\n{expertise_modifier}"
+        ),
+
+        "general_assistance" => format!(
+            "{expertise_role}\n\nResponda sobre: {original_input}\n\nESTRUTURE ASSIM:\n1. Conceito central (direto, sem rodeios)\n2. Como funciona na prática\n3. Exemplos concretos e aplicáveis\n4. Quando usar / quando não usar\n5. Próximos passos ou aprofundamento{constraints_text}\n\n{expertise_modifier}"
+        ),
+
+        _ => format!(
+            "{expertise_role}\n\nExecute com máxima qualidade: {original_input}{constraints_text}\n\n{expertise_modifier}"
+        ),
+    }
+}
+
+fn assemble_media_prompt(
+    media_prompt: &str,
+    domain: &DomainEnrichment,
+    expertise: &ExpertiseLevel,
 ) -> String {
     format!(
-        "Voce e um especialista em engenharia de prompts.\n\nPedido original: {input}\n\nIntencao detectada: {intent}.\nDominio: {domain} para {audience}.\nTecnica recomendada: {technique} ({rationale}).\nComplexidade: {level} (score {score}).\n\nRegras de dominio:\n- {constraints}\n\nAssumicoes para seguir sem bloquear:\n- {assumptions}\n\nPerguntas uteis, se houver tempo para refinamento:\n- {questions}\n\nEscreva um prompt final em portugues para o provedor {provider}, com estilo {style}, temperatura sugerida {temperature} e limite aproximado de {max_tokens} tokens. O prompt deve pedir uma resposta executavel, com secoes, criterios de qualidade e proximos passos.",
-        intent = intent.primary,
+        "{role}\n\n{media_prompt}\n\nCONTEXTO DO DOMÍNIO:\n- Domínio: {domain}\n- Público: {audience}\n\nRESTRIÇÕES DO DOMÍNIO:\n- {constraints}\n\n{modifier}",
+        role = expertise.role_prefix(),
+        modifier = expertise.prompt_modifier(),
         domain = domain.domain,
         audience = domain.audience,
-        technique = technique.technique,
-        rationale = technique.rationale,
-        level = complexity.level,
-        score = complexity.score,
         constraints = join_or_default(&domain.constraints, "sem restricoes adicionais"),
-        assumptions = join_or_default(&ambiguity.assumptions, "nenhuma assuncao critica"),
-        questions = join_or_default(&ambiguity.clarifying_questions, "nenhuma pergunta obrigatoria"),
-        style = parameters.style,
-        temperature = parameters.temperature,
-        max_tokens = parameters.max_tokens,
     )
+}
+
+pub fn detect_sector(
+    input: &str,
+) -> Option<(&'static str, &'static str, Vec<&'static str>, &'static str)> {
+    let l = input.to_lowercase();
+
+    let health = [
+        "dentista",
+        "médico",
+        "medico",
+        "clinica",
+        "clínica",
+        "hospital",
+        "odontologia",
+        "psicólogo",
+        "psicologo",
+        "fisio",
+        "nutricionista",
+        "farmácia",
+        "farmacia",
+        "veterinário",
+        "veterinario",
+        "terapeuta",
+        "enfermeiro",
+    ];
+
+    let legal = [
+        "advogado",
+        "advogada",
+        "advocacia",
+        "jurídico",
+        "juridico",
+        "direito",
+        "oab",
+        "escritório jurídico",
+        "processo",
+        "contrato",
+    ];
+
+    let food = [
+        "restaurante",
+        "lanchonete",
+        "chef",
+        "cardápio",
+        "cardapio",
+        "delivery",
+        "comida",
+        "gastronomia",
+        "bar",
+        "cafeteria",
+        "padaria",
+        "confeitaria",
+        "buffet",
+    ];
+
+    let beauty = [
+        "salão",
+        "salao",
+        "cabeleireiro",
+        "estética",
+        "estetica",
+        "manicure",
+        "maquiagem",
+        "barbearia",
+        "spa",
+        "nail",
+        "lashes",
+        "sobrancelha",
+        "depilação",
+        "depilacao",
+    ];
+
+    let education = [
+        "professor",
+        "escola",
+        "colégio",
+        "colegio",
+        "curso",
+        "ensino",
+        "educação",
+        "educacao",
+        "pedagogia",
+        "tutor",
+        "mentoria",
+        "treinamento",
+    ];
+
+    let realestate = [
+        "imóveis",
+        "imoveis",
+        "imobiliária",
+        "imobiliaria",
+        "corretor",
+        "construtora",
+        "arquiteto",
+        "engenheiro civil",
+        "reforma",
+        "decoração",
+        "decoracao",
+    ];
+
+    let finance = [
+        "contador",
+        "contabilidade",
+        "financeiro",
+        "finanças",
+        "financas",
+        "investimento",
+        "seguro",
+        "corretora",
+        "crédito",
+    ];
+
+    let tech = [
+        "startup",
+        "saas",
+        "aplicativo",
+        "plataforma",
+        "api",
+        "desenvolvedor",
+        "programador",
+        "sistema",
+        "software",
+    ];
+
+    if health.iter().any(|keyword| l.contains(keyword)) {
+        return Some((
+            "saude",
+            "pacientes buscando atendimento de saúde",
+            vec![
+                "linguagem acolhedora e profissional",
+                "sem promessa de resultado ou cura",
+                "mencionar registro profissional (CRM/CRO/CFF)",
+                "LGPD para dados de pacientes",
+            ],
+            "acolhimento, especialidades, agendamento, convenios",
+        ));
+    }
+
+    if legal.iter().any(|keyword| l.contains(keyword)) {
+        return Some((
+            "juridico",
+            "clientes buscando orientação jurídica confiável",
+            vec![
+                "sem promessa de resultado judicial",
+                "linguagem clara e profissional",
+                "respeitar Código de Ética da OAB",
+                "captação ética conforme resolução OAB",
+            ],
+            "credibilidade, areas de atuacao, captacao etica, OAB",
+        ));
+    }
+
+    if food.iter().any(|keyword| l.contains(keyword)) {
+        return Some((
+            "gastronomia",
+            "clientes buscando experiência gastronômica",
+            vec![
+                "destacar diferenciais e especialidades",
+                "facilidade para pedido/reserva em destaque",
+                "horário de funcionamento visível",
+                "fotos dos pratos em destaque",
+            ],
+            "cardapio, ambiente, delivery, reserva, experiencia",
+        ));
+    }
+
+    if beauty.iter().any(|keyword| l.contains(keyword)) {
+        return Some((
+            "beleza",
+            "clientes buscando serviços de beleza e estética",
+            vec![
+                "portfólio visual obrigatório",
+                "agendamento online em destaque",
+                "depoimentos de clientes com fotos",
+            ],
+            "servicos, agendamento, portfolio, transformacao",
+        ));
+    }
+
+    if education.iter().any(|keyword| l.contains(keyword)) {
+        return Some((
+            "educacao",
+            "alunos e responsáveis buscando formação",
+            vec![
+                "credenciais e metodologia em destaque",
+                "depoimentos de alunos",
+                "processo de inscrição claro",
+            ],
+            "metodologia, resultados, credenciais, inscricao",
+        ));
+    }
+
+    if realestate.iter().any(|keyword| l.contains(keyword)) {
+        return Some((
+            "imoveis",
+            "compradores e locatários de imóveis",
+            vec![
+                "CRECI em destaque",
+                "portfólio de imóveis com fotos",
+                "calculadora de financiamento se aplicável",
+            ],
+            "portfolio, localizacao, CRECI, busca de imoveis",
+        ));
+    }
+
+    if finance.iter().any(|keyword| l.contains(keyword)) {
+        return Some((
+            "financeiro",
+            "clientes buscando serviços financeiros",
+            vec![
+                "registro em órgão regulador (CVM/SUSEP/CRC)",
+                "sem promessa de rentabilidade",
+                "linguagem clara sobre riscos",
+            ],
+            "confianca, seguranca, expertise, regulatorio",
+        ));
+    }
+
+    if tech.iter().any(|keyword| l.contains(keyword)) {
+        return Some((
+            "tecnologia",
+            "usuários e decisores técnicos",
+            vec![
+                "explicitar requisitos não-funcionais",
+                "priorizar manutenibilidade e escalabilidade",
+                "documentação clara",
+            ],
+            "arquitetura, escalabilidade, seguranca, UX",
+        ));
+    }
+
+    None
+}
+
+pub fn is_creative_request(input: &str) -> bool {
+    let l = input.to_lowercase();
+    [
+        "me surpreenda",
+        "me surpreende",
+        "me impressione",
+        "me impressiona",
+        "surpreenda",
+        "impressione",
+        "algo criativo",
+        "seja criativo",
+        "crie algo",
+        "faça algo",
+        "faz algo",
+        "invente",
+        "improvise",
+        "me surpenda",
+        "me surpeenda",
+        "me surpreeda",
+        "surpreenda-me",
+        "impressione-me",
+        "você decide",
+        "voce decide",
+        "escolha você",
+        "escolha voce",
+        "mostre algo diferente",
+        "algo diferente",
+        "algo único",
+        "algo unico",
+        "algo especial",
+    ]
+    .iter()
+    .any(|term| l.contains(term))
 }
 
 fn contains_any(input: &str, candidates: &[&str]) -> bool {
@@ -444,7 +807,25 @@ mod tests {
         assert_eq!(response.intent.primary, "create_website");
         assert_eq!(response.domain.domain, "juridico");
         assert_eq!(response.provider, "claude");
+        assert_eq!(response.parameters.expertise_level, "SeniorDev");
         assert!(response.prompt.contains("advocacia"));
+    }
+
+    #[test]
+    fn applies_expertise_to_parameters() {
+        let pipeline = PromptPipeline::default();
+        let response = pipeline.engineer_with_expertise(
+            EngineerRequest {
+                input: "faz um site pra minha empresa de advocacia".to_string(),
+                provider: Some("claude".to_string()),
+            },
+            ExpertiseLevel::Especialista,
+            None,
+        );
+
+        assert_eq!(response.parameters.expertise_level, "Especialista");
+        assert!(response.prompt.contains("Use terminologia avançada"));
+        assert!(!response.prompt.contains("Escreva um prompt"));
     }
 
     #[test]
@@ -453,5 +834,51 @@ mod tests {
             resolve_ambiguity("faz um site", "faz um site", &detect_intent("faz um site"));
         assert!(ambiguity.is_ambiguous);
         assert!(!ambiguity.clarifying_questions.is_empty());
+    }
+
+    #[test]
+    fn detects_health_sector_when_domain_is_general() {
+        let pipeline = PromptPipeline::default();
+        let response = pipeline.engineer(EngineerRequest {
+            input: "sou dentista e quero um site".to_string(),
+            provider: None,
+        });
+
+        assert_eq!(response.domain.domain, "saude");
+        assert!(response
+            .domain
+            .constraints
+            .contains(&"LGPD para dados de pacientes".to_string()));
+        assert!(response.prompt.contains("Crie um site completo"));
+        assert!(!response.prompt.contains("Escreva um prompt"));
+    }
+
+    #[test]
+    fn detects_food_sector_for_restaurant_site() {
+        let pipeline = PromptPipeline::default();
+        let response = pipeline.engineer(EngineerRequest {
+            input: "tenho um restaurante e quero um site".to_string(),
+            provider: None,
+        });
+
+        assert_eq!(response.domain.domain, "gastronomia");
+        assert!(response.prompt.contains("DOMÍNIO: gastronomia"));
+    }
+
+    #[test]
+    fn detects_open_creative_request() {
+        let pipeline = PromptPipeline::default();
+        let response = pipeline.engineer(EngineerRequest {
+            input: "me surpreenda".to_string(),
+            provider: None,
+        });
+
+        assert_eq!(response.intent.primary, "open_creative");
+        assert_eq!(response.technique.technique, "creative_engine");
+        assert_eq!(response.parameters.temperature, 0.92);
+        assert!(response
+            .prompt
+            .contains("O usuário pediu para ser surpreendido"));
+        assert!(!response.prompt.contains("Escreva um prompt"));
     }
 }

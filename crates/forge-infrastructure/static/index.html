@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FORGE — Rust Prompt Engineer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0D0D0D;
+      --surface: #141414;
+      --surface2: #1E1E1E;
+      --border: #2A2A2A;
+      --ember: #FF4500;
+      --text: #F0F0F0;
+      --muted: #666;
+      --dim: #999;
+      --green: #4CAF50;
+      --yellow: #FFB347;
+      --radius: 8px;
+      --transition: 0.2s ease;
+    }
+
+    body[data-theme="light"] {
+      --bg: #F6F2EC;
+      --surface: #FFFFFF;
+      --surface2: #F2ECE3;
+      --border: #D8CFC3;
+      --text: #15120F;
+      --muted: #8A7D71;
+      --dim: #5F554C;
+      --green: #2E7D32;
+      --yellow: #B76E00;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top left, rgba(255,69,0,0.12), transparent 35%), var(--bg);
+      color: var(--text);
+      font-family: Inter, sans-serif;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .hidden { display: none !important; }
+    .mono { font-family: "JetBrains Mono", monospace; }
+    .brand { color: var(--ember); font-family: "Space Grotesk", sans-serif; font-weight: 800; letter-spacing: 0.08em; }
+
+    .setup {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+    }
+
+    .setup-card, .modal-card {
+      width: min(920px, 100%);
+      background: color-mix(in srgb, var(--surface) 96%, transparent);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 32px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+    }
+
+    .setup-title {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(32px, 5vw, 56px);
+      line-height: 1;
+      margin: 0 0 8px;
+    }
+
+    .muted { color: var(--dim); }
+    .grid { display: grid; gap: 16px; }
+    .provider-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin: 24px 0; }
+
+    .provider-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+
+    .provider-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .provider-name {
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 10px;
+      color: var(--dim);
+      font: 12px "JetBrains Mono", monospace;
+      white-space: nowrap;
+    }
+
+    .badge.green { color: var(--green); border-color: rgba(76,175,80,0.5); background: rgba(76,175,80,0.08); }
+    .badge.yellow { color: var(--yellow); border-color: rgba(255,179,71,0.45); background: rgba(255,179,71,0.08); }
+    .badge.ember { color: var(--ember); border-color: rgba(255,69,0,0.45); background: rgba(255,69,0,0.08); }
+
+    .key-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: color-mix(in srgb, var(--surface) 74%, var(--bg));
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--ember);
+      box-shadow: 0 0 0 3px rgba(255,69,0,0.12);
+    }
+
+    .btn {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 11px 16px;
+      font-weight: 600;
+    }
+
+    .btn:hover { border-color: var(--ember); color: var(--ember); }
+    .btn.primary { background: var(--ember); border-color: var(--ember); color: white; }
+    .btn.primary:hover { filter: brightness(1.1); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+
+    .expertise-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 14px 0 24px;
+    }
+
+    .expertise-buttons button.active {
+      border-color: var(--ember);
+      color: var(--ember);
+      background: rgba(255,69,0,0.08);
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: 64px 1fr;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: color-mix(in srgb, var(--bg) 92%, transparent);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+
+    .nav-actions { display: flex; gap: 10px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: calc(100vh - 64px);
+    }
+
+    aside {
+      border-right: 1px solid var(--border);
+      background: color-mix(in srgb, var(--surface) 86%, transparent);
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    main {
+      padding: 28px;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .side-section { margin-bottom: 28px; }
+    .side-title {
+      font: 11px "JetBrains Mono", monospace;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .provider-list, .history-list { display: grid; gap: 8px; }
+    .provider-line, .history-item {
+      background: color-mix(in srgb, var(--surface2) 55%, var(--bg));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px;
+      color: var(--dim);
+      font-size: 13px;
+    }
+
+    .history-item:hover {
+      color: var(--text);
+      border-color: var(--ember);
+      cursor: pointer;
+    }
+
+    .preview {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+
+    .preview-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; }
+    .json-preview, .prompt-preview, .response-box {
+      background: color-mix(in srgb, var(--bg) 88%, black);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      white-space: pre-wrap;
+      overflow: auto;
+      max-height: 360px;
+      color: #ddd;
+      font: 13px/1.6 "JetBrains Mono", monospace;
+    }
+
+    .composer {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+      border: 0;
+      background: transparent;
+      padding: 8px;
+      font-size: 18px;
+    }
+
+    .composer-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+
+    .response-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .working-state {
+      display: grid;
+      gap: 12px;
+    }
+
+    .working-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text);
+      font-weight: 800;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 18px;
+    }
+
+    .pulse-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--ember);
+      box-shadow: 0 0 0 rgba(255,69,0,0.5);
+      animation: pulse 1.4s infinite;
+    }
+
+    .thinking-line {
+      color: var(--dim);
+      animation: floatText 1.8s ease-in-out infinite;
+    }
+
+    .progress-track {
+      height: 7px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--surface2) 60%, var(--bg));
+      border: 1px solid var(--border);
+    }
+
+    .progress-track span {
+      display: block;
+      width: 35%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, transparent, var(--ember), transparent);
+      animation: loadingSlide 1.2s infinite;
+    }
+
+    .soft-warning {
+      display: grid;
+      gap: 12px;
+      border: 1px solid rgba(255,179,71,0.36);
+      border-radius: 12px;
+      padding: 16px;
+      color: var(--dim);
+      background: rgba(255,179,71,0.08);
+    }
+
+    .soft-warning strong {
+      color: var(--yellow);
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 18px;
+    }
+
+    .author-card {
+      margin-top: 18px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      color: var(--dim);
+    }
+
+    .contact-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .app-footer {
+      margin-top: 28px;
+      padding: 18px 0 4px;
+      border-top: 1px solid var(--border);
+      color: var(--dim);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .faith {
+      color: var(--ember);
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(0,0,0,0.72);
+      z-index: 20;
+    }
+
+    .modal-card { max-height: 90vh; overflow-y: auto; }
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .stat-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+
+    .stat-num {
+      font: 800 34px "Space Grotesk", sans-serif;
+      color: var(--ember);
+    }
+
+    .bar {
+      height: 8px;
+      background: color-mix(in srgb, var(--bg) 88%, black);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      background: var(--ember);
+    }
+
+    .guide-panel {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .guide-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .guide-title {
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      margin: 0 0 8px;
+    }
+
+    .steps {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      align-items: start;
+      color: var(--dim);
+      font-size: 14px;
+    }
+
+    .step strong {
+      color: var(--text);
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255,69,0,0.12);
+      color: var(--ember);
+      display: grid;
+      place-items: center;
+      font: 700 12px "JetBrains Mono", monospace;
+    }
+
+    .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .example-btn {
+      text-align: left;
+      font-size: 13px;
+      padding: 9px 11px;
+    }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 18px 0 10px;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .section-label span {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--ember);
+      color: white;
+      font: 700 12px "JetBrains Mono", monospace;
+    }
+
+    .run-hint {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,179,71,0.35);
+      color: var(--yellow);
+      background: rgba(255,179,71,0.08);
+      font-size: 13px;
+    }
+
+    .welcome-hero {
+      min-height: 120px;
+      display: grid;
+      align-content: end;
+      margin-bottom: 18px;
+    }
+
+    .welcome-hero h1 {
+      font: 800 clamp(30px, 5vw, 54px) "Space Grotesk", sans-serif;
+      margin: 0 0 8px;
+      letter-spacing: -0.03em;
+    }
+
+    .welcome-hero p {
+      margin: 0;
+      color: var(--dim);
+      max-width: 680px;
+    }
+
+    .status-callout {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
+      background: var(--surface);
+      color: var(--dim);
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .status-callout strong { color: var(--text); }
+
+    .tour-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.82);
+      z-index: 50;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .tour-card {
+      width: min(560px, 100%);
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 26px;
+      box-shadow: 0 30px 90px rgba(0,0,0,0.55);
+    }
+
+    .tour-card h2 {
+      margin: 0 0 10px;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 28px;
+    }
+
+    .tour-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      margin-top: 18px;
+    }
+
+    .guide-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .guide-tab.active {
+      border-color: var(--ember);
+      color: var(--ember);
+      background: rgba(255,69,0,0.08);
+    }
+
+    .guide-section {
+      display: none;
+    }
+
+    .guide-section.active {
+      display: block;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255,69,0,0.55); }
+      70% { box-shadow: 0 0 0 12px rgba(255,69,0,0); }
+      100% { box-shadow: 0 0 0 0 rgba(255,69,0,0); }
+    }
+
+    @keyframes floatText {
+      0%, 100% { opacity: 0.65; transform: translateY(0); }
+      50% { opacity: 1; transform: translateY(-2px); }
+    }
+
+    @keyframes loadingSlide {
+      0% { transform: translateX(-120%); }
+      100% { transform: translateX(320%); }
+    }
+
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      .guide-panel { grid-template-columns: 1fr; }
+      aside { border-right: 0; border-bottom: 1px solid var(--border); }
+      nav { padding: 0 14px; }
+      .nav-actions { gap: 6px; }
+      .nav-actions .btn { padding: 9px 10px; font-size: 13px; }
+      main { padding: 18px; }
+      .key-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body data-theme="dark">
+  <section id="setup" class="setup hidden">
+    <div class="setup-card">
+      <div class="brand">FORGE</div>
+      <h1 class="setup-title">Configuração inicial</h1>
+      <p class="muted">Detectamos o seguinte na sua máquina. Configure ao menos um provider para começar.</p>
+      <div id="setupProviders" class="grid provider-grid"></div>
+      <div class="side-title">Seu nível de conhecimento</div>
+      <div id="setupExpertise" class="expertise-buttons"></div>
+      <button id="startBtn" class="btn primary" disabled>▶ Começar a usar o Forge</button>
+    </div>
+  </section>
+
+  <section id="app" class="app hidden">
+    <nav>
+      <div class="brand">🔥 FORGE</div>
+      <div class="nav-actions">
+        <button id="themeBtn" class="btn">☀ Claro</button>
+        <button id="settingsBtn" class="btn">⚙ Configurações</button>
+        <button id="statsBtn" class="btn">📊 Stats</button>
+        <button id="helpBtn" class="btn">📚 Guia</button>
+      </div>
+    </nav>
+
+    <div class="layout">
+      <aside>
+        <div class="side-section">
+          <div class="side-title">Provider ativo</div>
+          <select id="providerSelect"></select>
+        </div>
+        <div class="side-section">
+          <div class="side-title">Modelo</div>
+          <select id="modelSelect"></select>
+        </div>
+        <div class="side-section">
+          <div class="side-title">Nível de conhecimento</div>
+          <select id="expertiseSelect"></select>
+        </div>
+        <div class="side-section">
+          <div class="side-title">Detectado</div>
+          <div id="providerList" class="provider-list"></div>
+        </div>
+        <div class="side-section">
+          <div class="side-title">Histórico</div>
+          <div id="historyList" class="history-list"></div>
+        </div>
+      </aside>
+
+      <main>
+        <section class="welcome-hero">
+          <h1>O que você quer fazer?</h1>
+          <p>Digite como se estivesse falando com uma pessoa. O Forge melhora o pedido, escolhe o contexto certo e envia para a IA configurada.</p>
+        </section>
+
+        <section id="providerStatus" class="status-callout">
+          <div>
+            <strong>Verificando providers...</strong>
+            <div class="muted">Se o Ollama não estiver rodando, vamos orientar como iniciar ou escolher outra IA.</div>
+          </div>
+          <button class="btn" onclick="openGuide('providers')">Ver instruções</button>
+        </section>
+
+        <section class="preview">
+          <div class="preview-head">
+            <strong><span class="section-label"><span>1</span>Detecção do Forge</span></strong>
+            <div>
+              <button id="copyPromptBtn" class="btn">Copiar prompt</button>
+              <button id="togglePreviewBtn" class="btn">expandir ▼</button>
+            </div>
+          </div>
+          <div id="badges" class="badges"></div>
+          <pre id="promptPreview" class="prompt-preview hidden"></pre>
+          <pre id="jsonPreview" class="json-preview hidden"></pre>
+        </section>
+
+        <div class="section-label"><span>2</span>Seu pedido</div>
+        <section class="composer">
+          <textarea id="mainInput" placeholder="O que você quer fazer?"></textarea>
+          <div class="composer-actions">
+            <button class="btn">📎 Arquivo</button>
+            <button id="sendBtn" class="btn primary">▶ Enviar</button>
+          </div>
+        </section>
+
+        <div class="section-label"><span>3</span>Resposta da IA</div>
+        <div id="responseBox" class="response-box">A resposta da IA aparecerá aqui.</div>
+        <div class="response-actions">
+          <button id="likeBtn" class="btn">👍</button>
+          <button id="dislikeBtn" class="btn">👎</button>
+          <button id="copyResponseBtn" class="btn">📋 Copiar</button>
+          <button id="regenBtn" class="btn">🔄 Regenerar</button>
+        </div>
+        <footer class="app-footer">
+          <span>FORGE criado por <strong>Rafael Ferreira</strong>, engenheiro e autor do projeto.</span>
+          <span class="faith">DEUS É FIÉL</span>
+        </footer>
+      </main>
+    </div>
+  </section>
+
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>Configurações</h2>
+        <button class="btn" data-close="settingsModal">Fechar</button>
+      </div>
+      <div class="side-title">Providers</div>
+      <div id="settingsProviders" class="grid provider-grid"></div>
+      <div class="side-title">Nível de conhecimento</div>
+      <div id="settingsExpertise" class="expertise-buttons"></div>
+      <div class="side-title">Sobre</div>
+      <p class="muted">FORGE roda localmente em Rust. API keys ficam no SQLite local do projeto.</p>
+      <div class="author-card">
+        <strong>Rafael Ferreira</strong><br>
+        Engenheiro e autor do projeto FORGE.
+        <div class="contact-row">
+          <a class="btn" href="https://wa.me/5521971604248" target="_blank" rel="noreferrer">WhatsApp</a>
+          <a class="btn" href="mailto:rafaelferreira2312@gmail.com">Email</a>
+          <a class="btn" href="https://www.linkedin.com/in/rafael-ferreira-dev/" target="_blank" rel="noreferrer">LinkedIn</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="statsModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>Stats</h2>
+        <button class="btn" data-close="statsModal">Fechar</button>
+      </div>
+      <div id="statsContent"></div>
+    </div>
+  </div>
+
+  <div id="helpModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>Instruções de uso</h2>
+        <button class="btn" data-close="helpModal">Fechar</button>
+      </div>
+      <div class="guide-tabs">
+        <button class="btn guide-tab active" data-guide="start">Começar</button>
+        <button class="btn guide-tab" data-guide="providers">Providers</button>
+        <button class="btn guide-tab" data-guide="keys">Chaves de API</button>
+        <button class="btn guide-tab" data-guide="ollama">Ollama local</button>
+        <button class="btn guide-tab" data-guide="examples">Exemplos</button>
+        <button class="btn guide-tab" data-guide="about">Autor</button>
+      </div>
+
+      <section id="guide-start" class="guide-section active">
+        <div class="guide-card">
+          <p class="guide-title">Fluxo básico</p>
+          <div class="steps">
+            <div class="step"><span class="step-num">1</span><div><strong>Escolha uma IA</strong><br>Ollama local se estiver rodando, ou configure uma chave Claude/Groq/OpenAI/Gemini.</div></div>
+            <div class="step"><span class="step-num">2</span><div><strong>Digite seu pedido</strong><br>Use linguagem normal: “sou dentista e quero um site” ou “explique motor elétrico”.</div></div>
+            <div class="step"><span class="step-num">3</span><div><strong>Confira a detecção</strong><br>Os badges mostram intenção, domínio, complexidade e técnica usada.</div></div>
+            <div class="step"><span class="step-num">4</span><div><strong>Envie para a IA</strong><br>O Forge manda o prompt melhorado para o provider escolhido e mostra a resposta.</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="guide-about" class="guide-section">
+        <div class="guide-card">
+          <p class="guide-title">Autor do projeto</p>
+          <p class="muted">FORGE foi criado por Rafael Ferreira, engenheiro e autor do projeto.</p>
+          <div class="contact-row">
+            <a class="btn" href="https://wa.me/5521971604248" target="_blank" rel="noreferrer">WhatsApp: (21) 97160-4248</a>
+            <a class="btn" href="mailto:rafaelferreira2312@gmail.com">rafaelferreira2312@gmail.com</a>
+            <a class="btn" href="https://www.linkedin.com/in/rafael-ferreira-dev/" target="_blank" rel="noreferrer">LinkedIn</a>
+          </div>
+          <div class="run-hint faith">DEUS É FIÉL</div>
+        </div>
+      </section>
+
+      <section id="guide-providers" class="guide-section">
+        <div class="guide-card">
+          <p class="guide-title">O que são providers?</p>
+          <p class="muted">Provider é a IA que responde. O Forge monta o prompt, mas quem gera a resposta final é Ollama, Claude, Groq, OpenAI ou Gemini.</p>
+          <div class="steps">
+            <div class="step"><span class="step-num">🟢</span><div><strong>Verde</strong><br>Está configurado e pode responder.</div></div>
+            <div class="step"><span class="step-num">⚪</span><div><strong>Cinza</strong><br>Precisa de API key ou serviço local rodando.</div></div>
+            <div class="step"><span class="step-num">FREE</span><div><strong>Grátis</strong><br>Ollama roda localmente. Groq tem free tier.</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="guide-keys" class="guide-section">
+        <div class="guide-card">
+          <p class="guide-title">Onde pegar chaves de API</p>
+          <div class="steps">
+            <div class="step"><span class="step-num">C</span><div><strong>Claude</strong><br>Acesse console.anthropic.com, crie uma API key e cole em Configurações.</div></div>
+            <div class="step"><span class="step-num">G</span><div><strong>Groq</strong><br>Acesse console.groq.com/keys. É uma boa opção rápida com free tier.</div></div>
+            <div class="step"><span class="step-num">O</span><div><strong>OpenAI</strong><br>Acesse platform.openai.com/api-keys e gere uma chave `sk-...`.</div></div>
+            <div class="step"><span class="step-num">Gem</span><div><strong>Gemini</strong><br>Acesse aistudio.google.com/app/apikey e gere uma chave `AIza...`.</div></div>
+          </div>
+          <div class="run-hint">As chaves ficam no SQLite local do Forge. Nunca aparecem no console do navegador.</div>
+        </div>
+      </section>
+
+      <section id="guide-ollama" class="guide-section">
+        <div class="guide-card">
+          <p class="guide-title">Como instalar e iniciar Ollama</p>
+          <div class="steps">
+            <div class="step"><span class="step-num">1</span><div><strong>Instalar</strong><br>Baixe em ollama.com/download ou instale no Linux/WSL conforme a documentação oficial.</div></div>
+            <div class="step"><span class="step-num">2</span><div><strong>Iniciar serviço</strong><br>Rode `ollama serve` se o serviço não iniciar sozinho.</div></div>
+            <div class="step"><span class="step-num">3</span><div><strong>Baixar modelo</strong><br>Exemplo: `ollama pull qwen2.5-coder:7b` ou `ollama pull llama3.1:8b`.</div></div>
+            <div class="step"><span class="step-num">4</span><div><strong>Testar</strong><br>Rode `curl http://localhost:11434/api/tags`. Se responder, o Forge detecta automaticamente.</div></div>
+          </div>
+          <div class="run-hint">Se o Forge disser que Ollama não está rodando, escolha outra IA em Configurações ou inicie o Ollama.</div>
+        </div>
+      </section>
+
+      <section id="guide-examples" class="guide-section">
+        <div class="guide-card">
+          <p class="guide-title">Exemplos para testar</p>
+          <div class="examples" id="exampleButtons"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="tourOverlay" class="tour-overlay hidden">
+    <div class="tour-card">
+      <h2 id="tourTitle">Bem-vindo ao Forge</h2>
+      <p id="tourText" class="muted"></p>
+      <div class="tour-actions">
+        <button id="tourSkipBtn" class="btn">Já aprendi</button>
+        <button id="tourNextBtn" class="btn primary">Próximo</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      providers: [],
+      activeProvider: '',
+      activeModel: '',
+      expertise: 'avancado',
+      preview: null,
+      debounce: null,
+      lastInput: '',
+      lastResponse: '',
+      theme: 'dark',
+      tourIndex: 0,
+    };
+
+    const guideExamples = [
+      'me explica como funciona um motor elétrico?',
+      'sou dentista e quero um site',
+      'tenho um restaurante e quero um site',
+      'me surpreenda com algo criativo',
+    ];
+
+    const expertiseLevels = [
+      ['iniciante', 'Iniciante'],
+      ['basico', 'Básico'],
+      ['intermediario', 'Intermediário'],
+      ['avancado', 'Avançado'],
+      ['especialista', 'Especialista'],
+    ];
+
+    const tourSteps = [
+      ['Escolha a IA', 'Na esquerda você escolhe o provider. Se Ollama estiver cinza ou der erro, ele não está rodando. Use Configurações para ligar outra IA.'],
+      ['Escolha o modelo', 'Para Ollama, prefira qwen2.5-coder:7b ou llama3.1:8b. Modelos maiores podem demorar e parecer travados.'],
+      ['Digite seu pedido', 'A tela principal fica pronta para escrever. Você não precisa saber prompt engineering.'],
+      ['Veja a detecção', 'Os badges mostram o que o Forge entendeu antes de enviar para a IA.'],
+      ['Envie e aprenda', 'Clique Enviar. Se der erro, o Forge deve explicar o motivo e sugerir o próximo caminho.'],
+    ];
+
+    const $ = (id) => document.getElementById(id);
+
+    async function api(path, options = {}) {
+      const response = await fetch(path, {
+        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+        ...options,
+      });
+      if (!response.ok) throw new Error(await response.text());
+      if (response.status === 204) return null;
+      return response.json();
+    }
+
+    async function boot() {
+      renderExamples();
+      renderExpertiseButtons('setupExpertise');
+      renderExpertiseButtons('settingsExpertise');
+      renderExpertiseSelect();
+      await refreshProviders();
+      await refreshHistory();
+      bindEvents();
+      if (state.providers.some(p => p.configured)) showApp();
+      else showSetup();
+      if (!localStorage.getItem('forgeTourDone')) startTour();
+    }
+
+    function renderExamples() {
+      const target = $('exampleButtons');
+      if (!target) return;
+      target.innerHTML = guideExamples.map(example =>
+        `<button class="btn example-btn" onclick="useExample('${encodeURIComponent(example)}')">${escapeHtml(example)}</button>`
+      ).join('');
+    }
+
+    function useExample(encoded) {
+      $('mainInput').value = decodeURIComponent(encoded);
+      schedulePreview();
+      $('mainInput').focus();
+    }
+
+    function showSetup() {
+      $('setup').classList.remove('hidden');
+      $('app').classList.add('hidden');
+    }
+
+    function showApp() {
+      $('setup').classList.add('hidden');
+      $('app').classList.remove('hidden');
+    }
+
+    async function refreshProviders() {
+      const data = await api('/api/providers');
+      state.providers = data.providers;
+      const firstConfigured = state.providers.find(p => p.configured);
+      state.activeProvider = state.activeProvider || (firstConfigured ? firstConfigured.id : 'ollama');
+      state.activeModel = choosePreferredModel(firstConfigured?.models || []);
+      renderProviders();
+    }
+
+    function renderProviders() {
+      renderProviderCards('setupProviders');
+      renderProviderCards('settingsProviders');
+      renderProviderSelect();
+      renderProviderList();
+      $('startBtn').disabled = !state.providers.some(p => p.configured);
+    }
+
+    function renderProviderCards(targetId) {
+      $(targetId).innerHTML = state.providers.map(provider => {
+        const status = provider.configured ? '🟢 CONFIGURADO' : provider.available ? '🟡 DISPONÍVEL' : '⚪ API KEY';
+        const badgeClass = provider.configured ? 'green' : provider.available ? 'yellow' : '';
+        const models = provider.models.length ? provider.models.join(', ') : 'nenhum modelo detectado';
+        const keyBox = provider.is_local ? '' : `
+          <div class="key-row">
+            <input id="${targetId}-${provider.id}-key" type="password" placeholder="${placeholder(provider.id)}">
+            <button class="btn" onclick="saveKey('${targetId}','${provider.id}')">Salvar</button>
+          </div>`;
+        const useButton = provider.configured ? `<button class="btn" onclick="useProvider('${provider.id}')">Usar como padrão</button>` : '';
+        return `
+          <div class="provider-card">
+            <div class="provider-top">
+              <span class="provider-name">${provider.name}</span>
+              <span class="badge ${badgeClass}">${status}${provider.free ? ' · FREE' : ''}</span>
+            </div>
+            <div class="muted mono">${provider.is_local ? 'LOCAL · GRÁTIS' : 'API KEY'}</div>
+            <div class="muted" style="margin-top:8px">${models}</div>
+            ${keyBox}
+            <div style="margin-top:10px">${useButton}</div>
+          </div>`;
+      }).join('');
+    }
+
+    function renderProviderSelect() {
+      $('providerSelect').innerHTML = state.providers.map(provider => {
+        const free = provider.free ? ' FREE' : '';
+        const disabled = provider.configured ? '' : 'disabled';
+        return `<option value="${provider.id}" ${disabled}>${provider.name}${free}${provider.configured ? '' : ' (configurar)'}</option>`;
+      }).join('');
+      $('providerSelect').value = state.activeProvider;
+      renderModelSelect();
+    }
+
+    function renderModelSelect() {
+      const provider = state.providers.find(p => p.id === state.activeProvider);
+      const models = provider?.models || [];
+      if (!state.activeModel || !models.includes(state.activeModel)) {
+        state.activeModel = choosePreferredModel(models);
+      }
+      $('modelSelect').innerHTML = models.length
+        ? models.map(model => `<option value="${model}">${model}</option>`).join('')
+        : '<option value="">modelo padrão</option>';
+      $('modelSelect').value = state.activeModel || '';
+    }
+
+    function renderProviderList() {
+      $('providerList').innerHTML = state.providers.map(provider => `
+        <div class="provider-line">
+          ${provider.configured ? '🟢' : '⚪'} ${provider.name}
+          ${provider.free ? '<span class="badge green">FREE</span>' : ''}
+          <div class="muted mono">${provider.id === state.activeProvider ? (state.activeModel || choosePreferredModel(provider.models)) : (choosePreferredModel(provider.models) || 'não configurado')}</div>
+        </div>
+      `).join('');
+      renderProviderStatus();
+    }
+
+    function renderProviderStatus() {
+      const provider = state.providers.find(p => p.id === state.activeProvider);
+      if (!provider) return;
+      const configured = provider.configured;
+      const ollamaDown = provider.id === 'ollama' && !configured;
+      $('providerStatus').innerHTML = `
+        <div>
+          <strong>${configured ? 'Provider pronto para responder' : 'Provider ainda não configurado'}</strong>
+          <div class="muted">
+            ${configured
+              ? `${provider.name} está ativo. Modelo: ${state.activeModel || 'padrão'}.`
+              : ollamaDown
+                ? 'Ollama não respondeu em localhost:11434. Inicie o Ollama ou configure outra IA.'
+                : `${provider.name} precisa de API key antes de responder.`}
+          </div>
+        </div>
+        <button class="btn" onclick="openGuide('${ollamaDown ? 'ollama' : 'providers'}')">Ver instruções</button>
+      `;
+    }
+
+    function renderExpertiseButtons(targetId) {
+      $(targetId).innerHTML = expertiseLevels.map(([value, label]) =>
+        `<button class="btn ${state.expertise === value ? 'active' : ''}" onclick="setExpertise('${value}')">${label}</button>`
+      ).join('');
+    }
+
+    function renderExpertiseSelect() {
+      $('expertiseSelect').innerHTML = expertiseLevels.map(([value, label]) =>
+        `<option value="${value}">${label}</option>`
+      ).join('');
+      $('expertiseSelect').value = state.expertise;
+    }
+
+    function placeholder(provider) {
+      return { claude: 'sk-ant-...', groq: 'gsk_...', openai: 'sk-...', gemini: 'AIza...' }[provider] || 'API key';
+    }
+
+    async function saveKey(targetId, provider) {
+      const input = $(`${targetId}-${provider}-key`);
+      const key = input.value.trim();
+      if (!key) return;
+      const result = await api('/api/providers/key', {
+        method: 'POST',
+        body: JSON.stringify({ provider, key }),
+      });
+      input.value = '';
+      alert(result.message);
+      await refreshProviders();
+    }
+
+    function useProvider(provider) {
+      state.activeProvider = provider;
+      const selected = state.providers.find(p => p.id === provider);
+      state.activeModel = choosePreferredModel(selected?.models || []);
+      renderProviderSelect();
+      showApp();
+    }
+
+    async function setExpertise(value) {
+      state.expertise = value;
+      await api('/api/profile', {
+        method: 'POST',
+        body: JSON.stringify({ expertise_level: value, domain: 'all' }),
+      });
+      renderExpertiseButtons('setupExpertise');
+      renderExpertiseButtons('settingsExpertise');
+      renderExpertiseSelect();
+      if ($('mainInput').value.trim()) schedulePreview();
+    }
+
+    function bindEvents() {
+      $('startBtn').onclick = showApp;
+      $('providerSelect').onchange = (event) => {
+        const provider = state.providers.find(p => p.id === event.target.value);
+        if (!provider?.configured) {
+          $('settingsModal').classList.remove('hidden');
+          return;
+        }
+        state.activeProvider = provider.id;
+        state.activeModel = choosePreferredModel(provider.models || []);
+        renderModelSelect();
+      };
+      $('modelSelect').onchange = (event) => {
+        state.activeModel = event.target.value;
+        renderProviderList();
+      };
+      $('expertiseSelect').onchange = (event) => setExpertise(event.target.value);
+      $('mainInput').addEventListener('input', schedulePreview);
+      $('mainInput').addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault();
+          send();
+        }
+      });
+      $('sendBtn').onclick = send;
+      $('regenBtn').onclick = send;
+      $('copyPromptBtn').onclick = () => copyText(state.preview?.prompt || '');
+      $('copyResponseBtn').onclick = () => copyText(state.lastResponse);
+      $('togglePreviewBtn').onclick = togglePreview;
+      $('settingsBtn').onclick = () => $('settingsModal').classList.remove('hidden');
+      $('statsBtn').onclick = showStats;
+      $('helpBtn').onclick = () => openGuide('start');
+      $('themeBtn').onclick = toggleTheme;
+      $('likeBtn').onclick = () => feedback(1);
+      $('dislikeBtn').onclick = () => feedback(-1);
+      $('tourNextBtn').onclick = nextTour;
+      $('tourSkipBtn').onclick = finishTour;
+      document.querySelectorAll('.guide-tab').forEach(btn => {
+        btn.onclick = () => showGuideSection(btn.dataset.guide);
+      });
+      document.querySelectorAll('[data-close]').forEach(btn => {
+        btn.onclick = () => $(btn.dataset.close).classList.add('hidden');
+      });
+    }
+
+    function schedulePreview() {
+      clearTimeout(state.debounce);
+      state.debounce = setTimeout(preview, 400);
+    }
+
+    async function preview() {
+      const input = $('mainInput').value.trim();
+      if (!input) return;
+      state.lastInput = input;
+      state.preview = await api('/api/engineer', {
+        method: 'POST',
+        body: JSON.stringify({ input, provider: state.activeProvider }),
+      });
+      renderPreview();
+      await refreshHistory();
+    }
+
+    function renderPreview() {
+      const p = state.preview;
+      $('badges').innerHTML = [
+        badge(intentLabel(p.intent.primary)),
+        badge(domainLabel(p.domain.domain)),
+        badge(`📊 ${capitalize(p.complexity.level)}`),
+        badge(techniqueLabel(p.technique.technique)),
+      ].join('');
+      $('promptPreview').textContent = p.prompt;
+      $('jsonPreview').textContent = JSON.stringify(p, null, 2);
+    }
+
+    function badge(text) {
+      return `<button class="badge ember" onclick="togglePreview()">${text}</button>`;
+    }
+
+    function intentLabel(intent) {
+      return {
+        create_website: '🌐 Site',
+        build_software: '💻 Software',
+        open_creative: '✨ Criativo',
+        general_assistance: '💬 Assistência',
+      }[intent] || `🎯 ${intent}`;
+    }
+
+    function domainLabel(domain) {
+      return {
+        saude: '🏥 Saúde',
+        juridico: '⚖️ Jurídico',
+        gastronomia: '🍽️ Gastronomia',
+        tecnologia: '⚙️ Tecnologia',
+        geral: '🌐 Geral',
+      }[domain] || `🏷️ ${capitalize(domain)}`;
+    }
+
+    function techniqueLabel(technique) {
+      return {
+        role_context_constraints: '🎭 Role+Constraints',
+        creative_engine: '✨ Creative Engine',
+        brief_to_deliverables: '📦 Briefing',
+        structured_decomposition: '🧱 Estruturado',
+        direct_instruction: '➡️ Direto',
+      }[technique] || technique;
+    }
+
+    function togglePreview() {
+      $('promptPreview').classList.toggle('hidden');
+      $('jsonPreview').classList.toggle('hidden');
+    }
+
+    async function send() {
+      const input = $('mainInput').value.trim();
+      if (!input) return;
+      renderWorkingState('Preparando seu pedido', [
+        'Lendo o que você escreveu...',
+        'Montando o briefing com o nível de conhecimento escolhido...',
+        'Preparando o envio para a IA configurada...'
+      ]);
+      if (!state.preview || state.preview.input !== input) await preview();
+      const provider = state.activeProvider || $('providerSelect').value;
+      renderWorkingState('Estamos trabalhando nisso', [
+        `Chamando ${providerLabel(provider)}...`,
+        'Aguardando a IA ler o prompt melhorado...',
+        'Processando a resposta para mostrar aqui...'
+      ]);
+      try {
+        const result = await api('/api/chat', {
+          method: 'POST',
+          body: JSON.stringify({
+            prompt: state.preview.prompt,
+            provider,
+            model: state.activeModel || null,
+          }),
+        });
+        state.lastResponse = result.response;
+        await typeResponse(result.response || '(provider retornou resposta vazia)');
+      } catch (error) {
+        renderChatError(error.message);
+      }
+      await refreshHistory();
+    }
+
+    function renderWorkingState(title, lines) {
+      $('responseBox').innerHTML = `
+        <div class="working-state">
+          <div class="working-title"><span class="pulse-dot"></span>${escapeHtml(title)}</div>
+          <div class="progress-track"><span></span></div>
+          ${lines.map(line => `<div class="thinking-line">${escapeHtml(line)}</div>`).join('')}
+        </div>
+      `;
+    }
+
+    function renderChatError(message) {
+      const isOllama = message.toLowerCase().includes('ollama') || message.includes('11434');
+      $('responseBox').innerHTML = `
+        <div class="soft-warning">
+          <strong>${isOllama ? 'Ainda não consegui falar com o Ollama' : 'A IA ainda não respondeu'}</strong>
+          <div>${escapeHtml(message)}</div>
+          <div>${isOllama
+            ? 'Isso normalmente significa que o Ollama não está aberto, parou de responder, ou o modelo local está ocupado. Você pode iniciar o Ollama ou escolher outra IA para receber resposta agora.'
+            : 'Verifique se o provider está configurado. Se precisar de resposta imediata, escolha outro provider disponível.'}</div>
+          <div class="contact-row">
+            <button class="btn" onclick="openGuide('${isOllama ? 'ollama' : 'providers'}')">Ver como resolver</button>
+            <button class="btn" onclick="$('settingsModal').classList.remove('hidden')">Configurar outra IA</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function typeResponse(text) {
+      $('responseBox').textContent = '';
+      for (const char of text) {
+        $('responseBox').textContent += char;
+        await new Promise(resolve => setTimeout(resolve, 4));
+      }
+    }
+
+    async function feedback(rating) {
+      if (!state.lastInput) return;
+      await api('/api/feedback', {
+        method: 'POST',
+        body: JSON.stringify({ input: state.lastInput, rating }),
+      });
+      alert(rating > 0 ? 'Feedback positivo salvo.' : 'Feedback negativo salvo.');
+    }
+
+    async function refreshHistory() {
+      try {
+        const history = await api('/api/history?limit=20');
+        $('historyList').innerHTML = history.map(item => `
+          <div class="history-item" onclick="loadHistory('${encodeURIComponent(item.input)}')">
+            ${escapeHtml(item.input.slice(0, 35))}${item.input.length > 35 ? '...' : ''}
+          </div>
+        `).join('') || '<div class="muted">Sem histórico ainda.</div>';
+      } catch (_) {}
+    }
+
+    function loadHistory(encoded) {
+      $('mainInput').value = decodeURIComponent(encoded);
+      schedulePreview();
+    }
+
+    async function showStats() {
+      const stats = await api('/api/stats');
+      $('statsContent').innerHTML = `
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-num">${stats.total_requests}</div><div class="muted">requests</div></div>
+          <div class="stat-box"><div class="stat-num">${stats.history_size}</div><div class="muted">histórico</div></div>
+          <div class="stat-box"><div class="stat-num">${stats.average_complexity_score.toFixed(1)}</div><div class="muted">complexidade média</div></div>
+        </div>
+        <h3>Domínios</h3>${bars(stats.by_domain)}
+        <h3>Intents</h3>${bars(stats.by_intent)}
+      `;
+      $('statsModal').classList.remove('hidden');
+    }
+
+    function bars(map) {
+      const entries = Object.entries(map || {});
+      if (!entries.length) return '<p class="muted">Sem dados ainda.</p>';
+      const max = Math.max(...entries.map(([, value]) => value));
+      return entries.map(([label, value]) => `
+        <div class="provider-line">
+          ${label} <span class="muted">(${value})</span>
+          <div class="bar"><span style="width:${(value / max) * 100}%"></span></div>
+        </div>
+      `).join('');
+    }
+
+    function copyText(text) {
+      if (!text) return;
+      navigator.clipboard.writeText(text);
+    }
+
+    function toggleTheme() {
+      state.theme = state.theme === 'dark' ? 'light' : 'dark';
+      document.body.dataset.theme = state.theme;
+      $('themeBtn').textContent = state.theme === 'dark' ? '☀ Claro' : '🌙 Escuro';
+    }
+
+    function openGuide(section = 'start') {
+      showGuideSection(section);
+      $('helpModal').classList.remove('hidden');
+    }
+
+    function showGuideSection(section) {
+      document.querySelectorAll('.guide-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.guide === section);
+      });
+      document.querySelectorAll('.guide-section').forEach(panel => {
+        panel.classList.toggle('active', panel.id === `guide-${section}`);
+      });
+    }
+
+    function startTour() {
+      state.tourIndex = 0;
+      renderTour();
+      $('tourOverlay').classList.remove('hidden');
+    }
+
+    function renderTour() {
+      const [title, text] = tourSteps[state.tourIndex];
+      $('tourTitle').textContent = title;
+      $('tourText').textContent = text;
+      $('tourNextBtn').textContent = state.tourIndex === tourSteps.length - 1 ? 'Concluir' : 'Próximo';
+    }
+
+    function nextTour() {
+      if (state.tourIndex >= tourSteps.length - 1) {
+        finishTour();
+        return;
+      }
+      state.tourIndex += 1;
+      renderTour();
+    }
+
+    function finishTour() {
+      localStorage.setItem('forgeTourDone', '1');
+      $('tourOverlay').classList.add('hidden');
+    }
+
+    function choosePreferredModel(models) {
+      if (!models || !models.length) return '';
+      const preferred = ['qwen', 'llama3.2', 'llama3.1', 'llama', 'mistral'];
+      for (const needle of preferred) {
+        const found = models.find(model => model.includes(needle));
+        if (found) return found;
+      }
+      return models.find(model => !model.includes('deepseek')) || models[0];
+    }
+
+    function providerLabel(provider) {
+      return {
+        ollama: 'Ollama local',
+        claude: 'Claude',
+        groq: 'Groq',
+        openai: 'OpenAI',
+        gemini: 'Gemini',
+      }[provider] || provider;
+    }
+
+    function capitalize(value) {
+      return value ? value.charAt(0).toUpperCase() + value.slice(1) : '';
+    }
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+      }[char]));
+    }
+
+    boot().catch(error => {
+      document.body.innerHTML = `<pre style="color:white;padding:24px">Erro ao iniciar Forge UI: ${error.message}</pre>`;
+    });
+  </script>
+</body>
+</html>
