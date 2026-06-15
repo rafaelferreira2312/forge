@@ -13,6 +13,7 @@ use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::SqlitePool;
 use std::net::SocketAddr;
 use std::path::PathBuf;
+use std::process::Command;
 use std::str::FromStr;
 use std::time::Duration;
 use tower_http::cors::CorsLayer;
@@ -97,6 +98,32 @@ struct HealthResponse {
     providers: ProvidersResponse,
 }
 
+#[derive(Debug, Deserialize)]
+struct InstallModelRequest {
+    model: String,
+}
+
+#[derive(Debug, Serialize)]
+struct InstallModelResponse {
+    success: bool,
+    message: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct LeadDnaRequest {
+    name: String,
+    email: String,
+    whatsapp: String,
+    dna: String,
+}
+
+#[derive(Debug, Serialize)]
+struct LeadDnaResponse {
+    saved: bool,
+    dna: String,
+    message: String,
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt()
@@ -121,6 +148,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/providers/key", post(save_provider_key))
         .route("/api/chat", post(chat))
         .route("/api/feedback", post(feedback))
+        .route("/api/leads/dna", post(save_lead_dna))
+        .route("/api/install/ollama-model", post(install_ollama_model))
         .route("/api/health", get(health))
         .route("/api/patterns", get(patterns))
         .route("/api/history", get(history))
@@ -193,6 +222,22 @@ async fn run_schema(db: &SqlitePool) -> Result<(), sqlx::Error> {
     .execute(db)
     .await?;
 
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS lead_dna (
+            id         TEXT PRIMARY KEY,
+            dna        TEXT NOT NULL UNIQUE,
+            name       TEXT NOT NULL,
+            email      TEXT NOT NULL,
+            whatsapp   TEXT NOT NULL,
+            source     TEXT NOT NULL DEFAULT 'landing',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        "#,
+    )
+    .execute(db)
+    .await?;
+
     Ok(())
 }
 
@@ -236,6 +281,82 @@ async fn health(State(state): State<AppState>) -> Json<HealthResponse> {
         ok: true,
         providers,
     })
+}
+
+async fn save_lead_dna(
+    State(state): State<AppState>,
+    Json(request): Json<LeadDnaRequest>,
+) -> Result<Json<LeadDnaResponse>, impl IntoResponse> {
+    let name = request.name.trim();
+    let email = request.email.trim().to_lowercase();
+    let whatsapp = request.whatsapp.trim();
+    let dna = request.dna.trim().to_uppercase();
+
+    if name.len() < 3
+        || !email.contains('@')
+        || whatsapp.chars().filter(|character| character.is_ascii_digit()).count() < 10
+        || !dna.starts_with("FORGE-DNA-")
+    {
+        return Err((StatusCode::BAD_REQUEST, "lead DNA invalido"));
+    }
+
+    sqlx::query(
+        r#"
+        INSERT INTO lead_dna (id, dna, name, email, whatsapp, source)
+        VALUES (?1, ?2, ?3, ?4, ?5, 'landing')
+        ON CONFLICT(dna) DO UPDATE SET
+            name = excluded.name,
+            email = excluded.email,
+            whatsapp = excluded.whatsapp
+        "#,
+    )
+    .bind(Uuid::new_v4().to_string())
+    .bind(&dna)
+    .bind(name)
+    .bind(&email)
+    .bind(whatsapp)
+    .execute(&state.db)
+    .await
+    .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "failed to save lead DNA"))?;
+
+    Ok(Json(LeadDnaResponse {
+        saved: true,
+        dna,
+        message: "DNA Forge gravado com sucesso.".to_string(),
+    }))
+}
+
+async fn install_ollama_model(Json(request): Json<InstallModelRequest>) -> Json<InstallModelResponse> {
+    let model = request.model.trim();
+    let allowed_models = [
+        "phi3:mini",
+        "llama3.2:3b",
+        "llama3.1:8b",
+        "llama3.2:1b",
+        "mistral:7b",
+        "deepseek-r1:7b",
+        "qwen2.5-coder:7b",
+        "codellama:7b",
+        "gemma2:9b",
+    ];
+
+    if !allowed_models.contains(&model) {
+        return Json(InstallModelResponse {
+            success: false,
+            message: format!("Modelo '{model}' nao permitido."),
+        });
+    }
+
+    match Command::new("ollama").args(["pull", model]).spawn() {
+        Ok(_) => Json(InstallModelResponse {
+            success: true,
+            message: format!("Download do modelo {model} iniciado."),
+        }),
+        Err(error) => Json(InstallModelResponse {
+            success: false,
+            message: format!("Ollama nao encontrado: {error}. Instale primeiro."),
+        }),
+    }
 }
 
 async fn save_provider_key(

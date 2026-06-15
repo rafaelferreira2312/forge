@@ -3,7 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FORGE — Rust Prompt Engineer</title>
+<title>FORGE — Prompt Engineering Automático com Rust e IA Local</title>
+<meta name="description" content="FORGE transforma pedidos simples em prompts profissionais, escolhe contexto, provider de IA e gera respostas com Rust, Ollama e múltiplas IAs. Crie seu DNA Forge único.">
+<meta name="keywords" content="Forge, prompt engineering, Rust, IA local, Ollama, Groq, Claude, OpenAI, Gemini, automação com IA, prompt engineer">
+<meta name="author" content="Rafael Ferreira">
+<meta name="robots" content="index, follow">
+<meta name="application-name" content="FORGE">
+<meta name="theme-color" content="#FF4500">
+<link rel="canonical" href="https://rafaelferreira2312.github.io/forge/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="FORGE — Você pensa. Forge traduz. A IA constrói.">
+<meta property="og:description" content="Instale o Forge, configure sua IA e gere seu DNA único para personalizar prompts e respostas.">
+<meta property="og:image" content="images/forge-logo.png">
+<meta property="og:url" content="https://rafaelferreira2312.github.io/forge/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="FORGE — Prompt Engineering Automático">
+<meta name="twitter:description" content="Um gateway Rust para transformar qualquer pedido em prompt executável e resposta de IA.">
+<meta name="twitter:image" content="images/forge-logo.png">
+<link rel="icon" type="image/png" href="images/forge-logo.png">
+<link rel="apple-touch-icon" href="images/forge-logo.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "FORGE",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Linux, macOS, Windows, WSL2",
+  "description": "FORGE transforma pedidos simples em prompts profissionais e envia para IAs configuradas.",
+  "author": {
+    "@type": "Person",
+    "name": "Rafael Ferreira"
+  },
+  "url": "https://rafaelferreira2312.github.io/forge/",
+  "image": "images/forge-logo.png",
+  "softwareRequirements": "Rust, SQLite, Ollama opcional"
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -61,6 +96,18 @@
     font-size: 22px;
     letter-spacing: 0.12em;
     color: var(--ember);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .brand-mark {
+    width: 36px;
+    height: 36px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid rgba(255,69,0,0.35);
+    box-shadow: 0 0 22px rgba(255,69,0,0.2);
   }
 
   .nav-links {
@@ -649,6 +696,76 @@
   .compare-table td.forge-col { color: var(--ember); }
   .compare-table tr:hover td { background: rgba(255,255,255,0.02); }
 
+  /* ── DNA FORGE ── */
+  .dna-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.85fr) minmax(320px, 1.15fr);
+    gap: 28px;
+    align-items: start;
+    margin-top: 48px;
+  }
+
+  .dna-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px;
+    box-shadow: 0 0 60px rgba(255,69,0,0.06);
+  }
+
+  .dna-form {
+    display: grid;
+    gap: 14px;
+  }
+
+  .dna-form label {
+    display: grid;
+    gap: 7px;
+    color: var(--dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+
+  .dna-form input {
+    width: 100%;
+    background: color-mix(in srgb, var(--bg) 82%, black);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 13px 14px;
+    font: 14px 'Inter', sans-serif;
+    outline: none;
+  }
+
+  .dna-form input:focus {
+    border-color: var(--ember);
+    box-shadow: 0 0 0 3px rgba(255,69,0,0.12);
+  }
+
+  .dna-output {
+    margin-top: 18px;
+    background: color-mix(in srgb, var(--bg) 88%, black);
+    border: 1px solid rgba(255,69,0,0.25);
+    border-radius: 14px;
+    padding: 18px;
+    color: var(--dim);
+    font: 13px/1.7 'JetBrains Mono', monospace;
+    white-space: pre-wrap;
+  }
+
+  .dna-code {
+    color: var(--ember);
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  .dna-note {
+    margin-top: 12px;
+    color: var(--gold);
+    font: 12px/1.6 'JetBrains Mono', monospace;
+  }
+
   /* ── SCREENSHOT ── */
   .screenshot-frame {
     margin-top: 56px;
@@ -772,6 +889,9 @@
     font-size: 16px;
     color: var(--ember);
     letter-spacing: 0.12em;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
   }
 
   .footer-text {
@@ -822,6 +942,7 @@
     .hero { padding: 100px 24px 60px; }
     .origin-grid { grid-template-columns: 1fr; }
     .adaptive-grid { grid-template-columns: 1fr; }
+    .dna-grid { grid-template-columns: 1fr; }
     .tl-item { grid-template-columns: 100px 2px 1fr; gap: 0 16px; }
     .tl-marker { display: none; }
     .tl-item { grid-template-columns: 2px 1fr; }
@@ -842,9 +963,10 @@
 
 <!-- NAV -->
 <nav>
-  <span class="nav-logo">FORGE</span>
+  <span class="nav-logo"><img class="brand-mark" src="images/forge-logo.png" alt="Logo Forge">FORGE</span>
   <ul class="nav-links">
     <li><a href="#origin">Origem</a></li>
+    <li><a href="#dna">DNA</a></li>
     <li><a href="#how">Como funciona</a></li>
     <li><a href="#learn">Aprendizado</a></li>
     <li><a href="#install">Instalar</a></li>
@@ -945,6 +1067,54 @@
       <div class="stat-card">
         <div class="stat-number">0</div>
         <div class="stat-desc">Dados enviados para nuvem. Tudo roda local.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- DNA FORGE -->
+<section id="dna">
+  <span class="section-label reveal">DNA Forge</span>
+  <h2 class="section-title reveal">Cada usuário precisa<br>de um DNA único.</h2>
+  <p class="section-body reveal">
+    Antes de usar o Forge de verdade, a pessoa ou empresa gera um DNA próprio. Esse DNA conecta nome, contato e identidade de uso para personalizar prompts, histórico, onboarding e futuras automações. Também vira um lead qualificado para acompanhamento.
+  </p>
+
+  <div class="dna-grid">
+    <div class="dna-card reveal">
+      <h3 style="font-family:'Space Grotesk',sans-serif;font-size:24px;margin-bottom:12px">Como funciona</h3>
+      <p style="color:var(--dim);margin-bottom:16px">
+        O DNA Forge não é senha. É uma assinatura pública de onboarding para identificar quem gerou o acesso inicial.
+      </p>
+      <div class="pipe-item">Nome completo ou empresa: <span>base da identidade</span></div>
+      <div class="pipe-item">Email: <span>canal principal de contato</span></div>
+      <div class="pipe-item">WhatsApp: <span>suporte, implantação e relacionamento</span></div>
+      <div class="dna-note">
+        Guarde seu DNA. Ele será usado para recuperar contexto, organizar leads e ativar recursos personalizados do Forge.
+      </div>
+    </div>
+
+    <div class="dna-card reveal">
+      <form class="dna-form" onsubmit="generateForgeDna(event)">
+        <label>
+          NOME COMPLETO OU EMPRESA
+          <input id="dna-name" type="text" autocomplete="name" placeholder="Ex: Rafael Ferreira ou Minha Empresa LTDA" required>
+        </label>
+        <label>
+          EMAIL
+          <input id="dna-email" type="email" autocomplete="email" placeholder="voce@email.com" required>
+        </label>
+        <label>
+          WHATSAPP
+          <input id="dna-whatsapp" type="tel" autocomplete="tel" placeholder="+55 21 99999-9999" required>
+        </label>
+        <button class="btn-primary" type="submit" style="border:0;margin-top:8px">Gerar meu DNA Forge</button>
+      </form>
+
+      <div id="dna-output" class="dna-output">
+        Preencha os três campos para gerar seu DNA único.
       </div>
     </div>
   </div>
@@ -1125,17 +1295,43 @@
 <!-- INSTALAÇÃO -->
 <section id="install">
   <span class="section-label reveal">Instalação</span>
-  <h2 class="section-title reveal">Roda em qualquer máquina.<br>Sem conta. Sem nuvem.</h2>
-  <p class="section-body reveal">
-    Escolha seu sistema operacional. Forge compila para um binário único e serve o frontend local em <code style="font-family:'JetBrains Mono',monospace;color:var(--ember);font-size:15px">localhost:3000</code>.
+  <h2 class="section-title reveal">
+    Um comando.<br>
+    Tudo instalado.<br>
+    <span style="color:var(--ember)">Pronto em 5 minutos.</span>
+  </h2>
+  <p class="section-body reveal" id="os-detected-msg">
+    Detectando seu sistema operacional...
+  </p>
+
+  <div class="install-hero reveal" id="install-hero-block">
+    <div class="code-block" style="max-width:680px;margin:40px auto 0">
+      <div class="code-header">
+        <span class="code-title" id="install-os-label">Detectando OS...</span>
+        <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+      </div>
+      <div class="code-body" id="install-command-display">
+        <span style="color:var(--muted)">Aguarde...</span>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:20px">
+      <p style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)">
+        Instala automaticamente: Rust · Ollama · modelo de IA adequado ao seu hardware · Forge
+      </p>
+    </div>
+  </div>
+
+  <p style="text-align:center;margin-top:40px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)">
+    ou escolha manualmente:
   </p>
 
   <div class="os-tabs reveal">
-    <button class="os-tab active" onclick="showOS('linux')">🐧 Linux</button>
-    <button class="os-tab" onclick="showOS('wsl')">🔧 WSL2</button>
-    <button class="os-tab" onclick="showOS('mac')">🍎 macOS</button>
-    <button class="os-tab" onclick="showOS('win')">🪟 Windows</button>
-    <button class="os-tab" onclick="showOS('docker')">🐳 Docker</button>
+    <button class="os-tab active" onclick="showOS('linux')" id="tab-linux">🐧 Linux</button>
+    <button class="os-tab" onclick="showOS('wsl')" id="tab-wsl">🔧 WSL2</button>
+    <button class="os-tab" onclick="showOS('mac')" id="tab-mac">🍎 macOS</button>
+    <button class="os-tab" onclick="showOS('win')" id="tab-win">🪟 Windows</button>
+    <button class="os-tab" onclick="showOS('docker')" id="tab-docker">🐳 Docker</button>
   </div>
 
   <!-- LINUX -->
@@ -1173,7 +1369,7 @@ rustc --version</div>
         <p>Build leva 3–5 min na primeira vez. Após isso, &lt;10s.</p>
         <div class="code-block">
           <div class="code-header"><span class="code-title">terminal</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
-          <div class="code-body">git clone https://github.com/seu-usuario/forge.git
+          <div class="code-body">git clone https://github.com/rafaelferreira2312/forge.git
 <span class="cmd">cd</span> forge
 cp .env.example .env <span class="comment"># configure sua API key</span>
 cargo build --release
@@ -1246,7 +1442,7 @@ export PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig"</div>
         <h4>Clonar e rodar</h4>
         <div class="code-block">
           <div class="code-header"><span class="code-title">terminal</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
-          <div class="code-body">git clone https://github.com/seu-usuario/forge.git
+          <div class="code-body">git clone https://github.com/rafaelferreira2312/forge.git
 <span class="cmd">cd</span> forge && cp .env.example .env
 cargo build --release && ./target/release/forge</div>
         </div>
@@ -1278,7 +1474,7 @@ winget install Rustlang.Rustup</div>
         <h4>Clonar e compilar</h4>
         <div class="code-block">
           <div class="code-header"><span class="code-title">powershell</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
-          <div class="code-body">git clone https://github.com/seu-usuario/forge.git
+          <div class="code-body">git clone https://github.com/rafaelferreira2312/forge.git
 cd forge
 copy .env.example .env
 cargo build --release
@@ -1300,11 +1496,47 @@ cargo build --release
         <p>A forma mais rápida de rodar. Não precisa instalar Rust.</p>
         <div class="code-block">
           <div class="code-header"><span class="code-title">terminal</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
-          <div class="code-body">git clone https://github.com/seu-usuario/forge.git
+          <div class="code-body">git clone https://github.com/rafaelferreira2312/forge.git
 <span class="cmd">cd</span> forge
 cp .env.example .env <span class="comment"># configure sua API key</span>
 docker compose up -d
 <span class="comment"># Abra: http://localhost:3000</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="reveal" style="margin-top:64px">
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:32px">
+      O que é instalado automaticamente
+    </h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px">
+      <div class="stat-card">
+        <div style="font-size:28px;margin-bottom:12px">🦀</div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;margin-bottom:6px">Rust</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim)">
+          Linguagem do Forge. Instalação automática via rustup.
+        </div>
+      </div>
+      <div class="stat-card">
+        <div style="font-size:28px;margin-bottom:12px">🤖</div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;margin-bottom:6px">Ollama</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim)">
+          IA local gratuita. Funciona offline. Zero custo.
+        </div>
+      </div>
+      <div class="stat-card" id="model-card">
+        <div style="font-size:28px;margin-bottom:12px">🧠</div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;margin-bottom:6px">Modelo adequado</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim)" id="model-recommendation">
+          Detectando seu hardware...
+        </div>
+      </div>
+      <div class="stat-card">
+        <div style="font-size:28px;margin-bottom:12px">🔥</div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;margin-bottom:6px">Forge</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim)">
+          Compilado e pronto em localhost:3000.
         </div>
       </div>
     </div>
@@ -1435,18 +1667,120 @@ docker compose up -d
   </p>
   <div class="cta-buttons reveal">
     <a href="#install" class="btn-primary">Instalar agora</a>
-    <a href="https://github.com/seu-usuario/forge" class="btn-secondary">Ver no GitHub →</a>
+    <a href="https://github.com/rafaelferreira2312/forge" class="btn-secondary">Ver no GitHub →</a>
   </div>
 </div>
 
 <!-- FOOTER -->
 <footer>
-  <span class="footer-logo">FORGE</span>
+  <span class="footer-logo"><img class="brand-mark" src="images/forge-logo.png" alt="Logo Forge">FORGE</span>
   <span class="footer-text">MIT License · Feito com Rust · Roda na sua máquina</span>
-  <span class="footer-text">github.com/seu-usuario/forge</span>
+  <span class="footer-text">github.com/rafaelferreira2312/forge</span>
 </footer>
 
 <script>
+/* ── DETECÇÃO DE OS PARA INSTALAÇÃO ── */
+(function detectAndShowInstall() {
+  const ua = navigator.userAgent.toLowerCase();
+  const platform = navigator.platform.toLowerCase();
+
+  let os = 'linux';
+  let osLabel = '🐧 Linux';
+  let command = 'curl -fsSL https://raw.githubusercontent.com/rafaelferreira2312/forge/main/scripts/install.sh | bash';
+
+  if (ua.includes('win') || platform.includes('win')) {
+    os = 'windows';
+    osLabel = '🪟 Windows';
+    command = 'irm https://raw.githubusercontent.com/rafaelferreira2312/forge/main/scripts/install-windows.ps1 | iex';
+  } else if (ua.includes('mac') || platform.includes('mac')) {
+    os = 'mac';
+    osLabel = '🍎 macOS';
+  }
+
+  const msg = document.getElementById('os-detected-msg');
+  if (msg) msg.textContent = `Sistema detectado: ${osLabel}. Cole o comando abaixo no terminal.`;
+
+  const label = document.getElementById('install-os-label');
+  if (label) label.textContent = `terminal (${osLabel})`;
+
+  const display = document.getElementById('install-command-display');
+  if (display) {
+    const [cmd, ...rest] = command.split(' ');
+    display.innerHTML = `<span class="cmd">${cmd}</span> ${rest.join(' ')}`;
+  }
+
+  const tabMap = { linux: 'tab-linux', mac: 'tab-mac', windows: 'tab-win' };
+  if (tabMap[os]) {
+    document.querySelectorAll('.os-tab').forEach(tab => tab.classList.remove('active'));
+    const activeTab = document.getElementById(tabMap[os]);
+    if (activeTab) activeTab.classList.add('active');
+    showOS(os === 'windows' ? 'win' : os);
+  }
+
+  const modelRec = document.getElementById('model-recommendation');
+  if (modelRec) {
+    const isMobile = /mobile|android|iphone|ipad/.test(ua);
+    modelRec.textContent = isMobile
+      ? 'phi3:mini - leve, funciona em qualquer hardware.'
+      : 'llama3.2:3b ou llama3.1:8b conforme sua RAM.';
+  }
+})();
+
+/* ── DNA FORGE ── */
+function normalizeDnaField(value) {
+  return value.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function forgeDnaHash(input) {
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).toUpperCase().padStart(8, '0');
+}
+
+function dnaEscape(value) {
+  return value.replace(/[&<>"']/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  }[char]));
+}
+
+async function generateForgeDna(event) {
+  event.preventDefault();
+  const name = document.getElementById('dna-name').value.trim();
+  const email = document.getElementById('dna-email').value.trim();
+  const whatsapp = document.getElementById('dna-whatsapp').value.trim();
+  const normalized = `${normalizeDnaField(name)}|${normalizeDnaField(email)}|${whatsapp.replace(/\D/g, '')}`;
+  const hash = forgeDnaHash(normalized);
+  const dna = `FORGE-DNA-${hash.slice(0, 4)}-${hash.slice(4)}`;
+  const payload = { name, email, whatsapp, dna };
+
+  localStorage.setItem('forgeLeadDna', JSON.stringify({ ...payload, generated_at: new Date().toISOString() }));
+
+  const output = document.getElementById('dna-output');
+  output.innerHTML = `DNA GERADO:\n<span class="dna-code">${dna}</span>\n\nNome/empresa: ${dnaEscape(name)}\nEmail: ${dnaEscape(email)}\nWhatsApp: ${dnaEscape(whatsapp)}\n\nGuarde este DNA. Ele identifica seu onboarding no Forge.`;
+
+  try {
+    const response = await fetch('/api/leads/dna', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (response.ok) {
+      output.innerHTML += `\n\nStatus: lead gravado no Forge.`;
+    } else {
+      output.innerHTML += `\n\nStatus: DNA salvo neste navegador. Quando o backend de leads estiver online, ele será enviado.`;
+    }
+  } catch (_) {
+    output.innerHTML += `\n\nStatus: DNA salvo neste navegador. Se estiver no GitHub Pages, copie e guarde este código.`;
+  }
+}
+
 /* ── FAÍSCAS ── */
 const canvas = document.getElementById('sparks-canvas');
 const ctx = canvas.getContext('2d');
@@ -1513,8 +1847,10 @@ reveals.forEach(r => io.observe(r));
 function showOS(os) {
   document.querySelectorAll('.os-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.os-panel').forEach(p => p.classList.remove('active'));
-  event.target.classList.add('active');
-  document.getElementById('os-' + os).classList.add('active');
+  const tab = document.getElementById('tab-' + os);
+  if (tab) tab.classList.add('active');
+  const panel = document.getElementById('os-' + os);
+  if (panel) panel.classList.add('active');
 }
 
 /* ── COPY BUTTON ── */
