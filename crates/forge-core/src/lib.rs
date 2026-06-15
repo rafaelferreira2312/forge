@@ -202,7 +202,10 @@ fn normalize(input: &str) -> String {
 
 fn detect_intent(normalized: &str) -> IntentResult {
     let mut signals = Vec::new();
-    let (primary, confidence) = if is_creative_request(normalized) {
+    let (primary, confidence) = if is_direct_answer_request(normalized) {
+        signals.push("direct_answer".to_string());
+        ("direct_answer", 0.9)
+    } else if is_creative_request(normalized) {
         signals.push("creative_engine".to_string());
         ("open_creative", 0.95)
     } else if contains_any(normalized, &["site", "pagina", "landing", "web"]) {
@@ -488,6 +491,10 @@ pub fn assemble_executable_prompt(
 
         "general_assistance" => format!(
             "{expertise_role}\n\nResponda sobre: {original_input}\n\nESTRUTURE ASSIM:\n1. Conceito central (direto, sem rodeios)\n2. Como funciona na prática\n3. Exemplos concretos e aplicáveis\n4. Quando usar / quando não usar\n5. Próximos passos ou aprofundamento{constraints_text}\n\n{expertise_modifier}"
+        ),
+
+        "direct_answer" => format!(
+            "{expertise_role}\n\nResponda exatamente ao pedido do usuário, de forma curta e direta: {original_input}\n\nREGRAS:\n- Se o usuário pediu confirmação, responda apenas a confirmação necessária.\n- Não explique conceitos que não foram perguntados.\n- Não transforme a resposta em tutorial.\n- Use no máximo 3 frases, salvo se o usuário pedir detalhes.\n\n{expertise_modifier}"
         ),
 
         _ => format!(
@@ -778,6 +785,33 @@ pub fn is_creative_request(input: &str) -> bool {
     ]
     .iter()
     .any(|term| l.contains(term))
+}
+
+pub fn is_direct_answer_request(input: &str) -> bool {
+    let l = input.to_lowercase();
+    let word_count = l.split_whitespace().count();
+    let direct_terms = [
+        "responda se",
+        "responda si",
+        "responda só",
+        "responda so",
+        "só responda",
+        "so responda",
+        "apenas responda",
+        "está ok",
+        "esta ok",
+        "tá ok",
+        "ta ok",
+        "está certo",
+        "esta certo",
+        "sim ou não",
+        "sim ou nao",
+        "diga ok",
+        "fale ok",
+    ];
+
+    direct_terms.iter().any(|term| l.contains(term))
+        || (word_count <= 5 && contains_any(&l, &["ok", "certo", "funciona", "responda"]))
 }
 
 fn contains_any(input: &str, candidates: &[&str]) -> bool {

@@ -204,9 +204,25 @@
 
     main {
       padding: 28px;
-      max-width: 1100px;
+      max-width: 1440px;
       width: 100%;
       margin: 0 auto;
+    }
+
+    .workbench {
+      display: grid;
+      grid-template-columns: minmax(360px, 0.86fr) minmax(420px, 1.14fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .workbench-column {
+      min-width: 0;
+    }
+
+    .response-column {
+      position: sticky;
+      top: 84px;
     }
 
     .side-section { margin-bottom: 28px; }
@@ -258,9 +274,14 @@
       padding: 16px;
       white-space: pre-wrap;
       overflow: auto;
-      max-height: 360px;
+      max-height: 260px;
       color: #ddd;
       font: 13px/1.6 "JetBrains Mono", monospace;
+    }
+
+    .response-box {
+      min-height: 520px;
+      max-height: calc(100vh - 250px);
     }
 
     .composer {
@@ -287,6 +308,28 @@
       gap: 12px;
       border-top: 1px solid var(--border);
       padding-top: 12px;
+    }
+
+    .attachment-note {
+      margin-top: 10px;
+      color: var(--dim);
+      font-size: 13px;
+    }
+
+    .attachment-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .attachment-chip {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 10px;
+      color: var(--dim);
+      background: color-mix(in srgb, var(--surface2) 60%, var(--bg));
+      font: 12px "JetBrains Mono", monospace;
     }
 
     .response-actions {
@@ -372,6 +415,33 @@
       flex-wrap: wrap;
       gap: 8px;
       margin-top: 10px;
+    }
+
+    .provider-help {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+      color: var(--dim);
+      font-size: 13px;
+    }
+
+    .provider-help a {
+      color: var(--ember);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .provider-help a:hover { text-decoration: underline; }
+
+    .model-row {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .provider-icon {
+      font-size: 20px;
+      margin-right: 6px;
     }
 
     .app-footer {
@@ -646,6 +716,9 @@
 
     @media (max-width: 860px) {
       .layout { grid-template-columns: 1fr; }
+      .workbench { grid-template-columns: 1fr; }
+      .response-column { position: static; }
+      .response-box { min-height: 260px; max-height: 420px; }
       .guide-panel { grid-template-columns: 1fr; }
       aside { border-right: 0; border-bottom: 1px solid var(--border); }
       nav { padding: 0 14px; }
@@ -718,38 +791,49 @@
           <button class="btn" onclick="openGuide('providers')">Ver instruções</button>
         </section>
 
-        <section class="preview">
-          <div class="preview-head">
-            <strong><span class="section-label"><span>1</span>Detecção do Forge</span></strong>
-            <div>
-              <button id="copyPromptBtn" class="btn">Copiar prompt</button>
-              <button id="togglePreviewBtn" class="btn">expandir ▼</button>
+        <div class="workbench">
+          <div class="workbench-column">
+            <section class="preview">
+              <div class="preview-head">
+                <strong><span class="section-label"><span>1</span>Detecção do Forge</span></strong>
+                <div>
+                  <button id="copyPromptBtn" class="btn">Copiar prompt</button>
+                  <button id="togglePreviewBtn" class="btn">expandir ▼</button>
+                </div>
+              </div>
+              <div id="badges" class="badges"></div>
+              <pre id="promptPreview" class="prompt-preview hidden"></pre>
+              <pre id="jsonPreview" class="json-preview hidden"></pre>
+            </section>
+
+            <div class="section-label"><span>2</span>Seu pedido</div>
+            <section class="composer">
+              <textarea id="mainInput" placeholder="O que você quer fazer?"></textarea>
+              <div id="attachmentList" class="attachment-list"></div>
+              <div class="composer-actions">
+                <div>
+                  <input id="fileInput" class="hidden" type="file" multiple accept=".txt,.md,.json,.csv,.html,.css,.js,.ts,.tsx,.rs,.php,.py,.sql,text/*">
+                  <button id="attachBtn" class="btn" type="button">📎 Arquivo</button>
+                  <div class="attachment-note">Anexe textos, código ou documentos simples. Imagens ainda entram como referência visual manual.</div>
+                </div>
+                <button id="sendBtn" class="btn primary">▶ Enviar</button>
+              </div>
+            </section>
+          </div>
+
+          <div class="workbench-column response-column">
+            <div class="section-label"><span>3</span>Resposta da IA</div>
+            <div id="responseBox" class="response-box">A resposta da IA aparecerá aqui.</div>
+            <div class="response-actions">
+              <button id="likeBtn" class="btn">👍</button>
+              <button id="dislikeBtn" class="btn">👎</button>
+              <button id="copyResponseBtn" class="btn">📋 Copiar</button>
+              <button id="regenBtn" class="btn">🔄 Regenerar</button>
             </div>
           </div>
-          <div id="badges" class="badges"></div>
-          <pre id="promptPreview" class="prompt-preview hidden"></pre>
-          <pre id="jsonPreview" class="json-preview hidden"></pre>
-        </section>
-
-        <div class="section-label"><span>2</span>Seu pedido</div>
-        <section class="composer">
-          <textarea id="mainInput" placeholder="O que você quer fazer?"></textarea>
-          <div class="composer-actions">
-            <button class="btn">📎 Arquivo</button>
-            <button id="sendBtn" class="btn primary">▶ Enviar</button>
-          </div>
-        </section>
-
-        <div class="section-label"><span>3</span>Resposta da IA</div>
-        <div id="responseBox" class="response-box">A resposta da IA aparecerá aqui.</div>
-        <div class="response-actions">
-          <button id="likeBtn" class="btn">👍</button>
-          <button id="dislikeBtn" class="btn">👎</button>
-          <button id="copyResponseBtn" class="btn">📋 Copiar</button>
-          <button id="regenBtn" class="btn">🔄 Regenerar</button>
         </div>
         <footer class="app-footer">
-          <span>FORGE criado por <strong>Rafael Ferreira</strong>, engenheiro e autor do projeto.</span>
+          <span>FORGE criado por <strong>Rafael Ferreira</strong> · <a href="https://wa.me/5521971604248" target="_blank" rel="noreferrer">WhatsApp</a> · <a href="mailto:rafaelferreira2312@gmail.com">Email</a> · <a href="https://www.linkedin.com/in/rafael-ferreira-dev/" target="_blank" rel="noreferrer">LinkedIn</a></span>
           <span class="faith">DEUS É FIÉL</span>
         </footer>
       </main>
@@ -767,16 +851,7 @@
       <div class="side-title">Nível de conhecimento</div>
       <div id="settingsExpertise" class="expertise-buttons"></div>
       <div class="side-title">Sobre</div>
-      <p class="muted">FORGE roda localmente em Rust. API keys ficam no SQLite local do projeto.</p>
-      <div class="author-card">
-        <strong>Rafael Ferreira</strong><br>
-        Engenheiro e autor do projeto FORGE.
-        <div class="contact-row">
-          <a class="btn" href="https://wa.me/5521971604248" target="_blank" rel="noreferrer">WhatsApp</a>
-          <a class="btn" href="mailto:rafaelferreira2312@gmail.com">Email</a>
-          <a class="btn" href="https://www.linkedin.com/in/rafael-ferreira-dev/" target="_blank" rel="noreferrer">LinkedIn</a>
-        </div>
-      </div>
+      <p class="muted">FORGE roda localmente em Rust. API keys ficam no SQLite local do projeto. Escolha a IA e o modelo neste painel; se uma IA falhar, troque para outra configurada sem perder o prompt.</p>
     </div>
   </div>
 
@@ -802,7 +877,6 @@
         <button class="btn guide-tab" data-guide="keys">Chaves de API</button>
         <button class="btn guide-tab" data-guide="ollama">Ollama local</button>
         <button class="btn guide-tab" data-guide="examples">Exemplos</button>
-        <button class="btn guide-tab" data-guide="about">Autor</button>
       </div>
 
       <section id="guide-start" class="guide-section active">
@@ -817,27 +891,15 @@
         </div>
       </section>
 
-      <section id="guide-about" class="guide-section">
-        <div class="guide-card">
-          <p class="guide-title">Autor do projeto</p>
-          <p class="muted">FORGE foi criado por Rafael Ferreira, engenheiro e autor do projeto.</p>
-          <div class="contact-row">
-            <a class="btn" href="https://wa.me/5521971604248" target="_blank" rel="noreferrer">WhatsApp: (21) 97160-4248</a>
-            <a class="btn" href="mailto:rafaelferreira2312@gmail.com">rafaelferreira2312@gmail.com</a>
-            <a class="btn" href="https://www.linkedin.com/in/rafael-ferreira-dev/" target="_blank" rel="noreferrer">LinkedIn</a>
-          </div>
-          <div class="run-hint faith">DEUS É FIÉL</div>
-        </div>
-      </section>
-
       <section id="guide-providers" class="guide-section">
         <div class="guide-card">
           <p class="guide-title">O que são providers?</p>
-          <p class="muted">Provider é a IA que responde. O Forge monta o prompt, mas quem gera a resposta final é Ollama, Claude, Groq, OpenAI ou Gemini.</p>
+          <p class="muted">Provider é a IA que responde. O Forge monta o prompt, mas quem gera a resposta final é Ollama, Claude, Groq, OpenAI, Gemini, OpenRouter, Mistral, DeepSeek, Together, Cerebras ou Hugging Face.</p>
           <div class="steps">
             <div class="step"><span class="step-num">🟢</span><div><strong>Verde</strong><br>Está configurado e pode responder.</div></div>
             <div class="step"><span class="step-num">⚪</span><div><strong>Cinza</strong><br>Precisa de API key ou serviço local rodando.</div></div>
-            <div class="step"><span class="step-num">FREE</span><div><strong>Grátis</strong><br>Ollama roda localmente. Groq tem free tier.</div></div>
+            <div class="step"><span class="step-num">FREE</span><div><strong>Grátis ou com free tier</strong><br>Ollama é local. Groq, OpenRouter, Cerebras e Hugging Face podem ter planos gratuitos ou modelos free, conforme regra de cada site.</div></div>
+            <div class="step"><span class="step-num">↔</span><div><strong>Troca rápida</strong><br>Se uma IA der erro, abra Configurações, escolha outra IA configurada e envie novamente.</div></div>
           </div>
         </div>
       </section>
@@ -846,10 +908,16 @@
         <div class="guide-card">
           <p class="guide-title">Onde pegar chaves de API</p>
           <div class="steps">
-            <div class="step"><span class="step-num">C</span><div><strong>Claude</strong><br>Acesse console.anthropic.com, crie uma API key e cole em Configurações.</div></div>
-            <div class="step"><span class="step-num">G</span><div><strong>Groq</strong><br>Acesse console.groq.com/keys. É uma boa opção rápida com free tier.</div></div>
-            <div class="step"><span class="step-num">O</span><div><strong>OpenAI</strong><br>Acesse platform.openai.com/api-keys e gere uma chave `sk-...`.</div></div>
-            <div class="step"><span class="step-num">Gem</span><div><strong>Gemini</strong><br>Acesse aistudio.google.com/app/apikey e gere uma chave `AIza...`.</div></div>
+            <div class="step"><span class="step-num">C</span><div><strong>Claude</strong><br><a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer">console.anthropic.com/settings/keys</a></div></div>
+            <div class="step"><span class="step-num">G</span><div><strong>Groq</strong><br><a href="https://console.groq.com/keys" target="_blank" rel="noreferrer">console.groq.com/keys</a> - costuma ser rápido e tem free tier.</div></div>
+            <div class="step"><span class="step-num">O</span><div><strong>OpenAI</strong><br><a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">platform.openai.com/api-keys</a></div></div>
+            <div class="step"><span class="step-num">Gem</span><div><strong>Gemini</strong><br><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">aistudio.google.com/app/apikey</a></div></div>
+            <div class="step"><span class="step-num">OR</span><div><strong>OpenRouter</strong><br><a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer">openrouter.ai/keys</a> - concentra vários modelos, inclusive opções free.</div></div>
+            <div class="step"><span class="step-num">M</span><div><strong>Mistral</strong><br><a href="https://console.mistral.ai/api-keys" target="_blank" rel="noreferrer">console.mistral.ai/api-keys</a></div></div>
+            <div class="step"><span class="step-num">D</span><div><strong>DeepSeek</strong><br><a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noreferrer">platform.deepseek.com/api_keys</a></div></div>
+            <div class="step"><span class="step-num">T</span><div><strong>Together AI</strong><br><a href="https://api.together.ai/settings/api-keys" target="_blank" rel="noreferrer">api.together.ai/settings/api-keys</a></div></div>
+            <div class="step"><span class="step-num">Ce</span><div><strong>Cerebras</strong><br><a href="https://cloud.cerebras.ai/platform/" target="_blank" rel="noreferrer">cloud.cerebras.ai/platform</a></div></div>
+            <div class="step"><span class="step-num">HF</span><div><strong>Hugging Face</strong><br><a href="https://huggingface.co/settings/tokens" target="_blank" rel="noreferrer">huggingface.co/settings/tokens</a></div></div>
           </div>
           <div class="run-hint">As chaves ficam no SQLite local do Forge. Nunca aparecem no console do navegador.</div>
         </div>
@@ -900,6 +968,7 @@
       lastResponse: '',
       theme: 'dark',
       tourIndex: 0,
+      attachments: [],
     };
 
     const guideExamples = [
@@ -916,6 +985,86 @@
       ['avancado', 'Avançado'],
       ['especialista', 'Especialista'],
     ];
+
+    const providerInfo = {
+      ollama: {
+        icon: '🟢',
+        tokenUrl: 'https://ollama.com/download',
+        tokenLabel: 'Baixar Ollama',
+        description: 'Roda local e grátis. Precisa do serviço ativo em localhost:11434.',
+        placeholder: '',
+      },
+      claude: {
+        icon: '🧠',
+        tokenUrl: 'https://console.anthropic.com/settings/keys',
+        tokenLabel: 'Pegar token Claude',
+        description: 'Ótimo para raciocínio, escrita e código com qualidade.',
+        placeholder: 'sk-ant-...',
+      },
+      groq: {
+        icon: '⚡',
+        tokenUrl: 'https://console.groq.com/keys',
+        tokenLabel: 'Pegar token Groq',
+        description: 'Muito rápido e costuma ter free tier para testar.',
+        placeholder: 'gsk_...',
+      },
+      openai: {
+        icon: '🤖',
+        tokenUrl: 'https://platform.openai.com/api-keys',
+        tokenLabel: 'Pegar token OpenAI',
+        description: 'Modelos gerais fortes para texto, código e ferramentas.',
+        placeholder: 'sk-...',
+      },
+      gemini: {
+        icon: '💎',
+        tokenUrl: 'https://aistudio.google.com/app/apikey',
+        tokenLabel: 'Pegar token Gemini',
+        description: 'Boa opção do Google, com modelos Flash rápidos.',
+        placeholder: 'AIza...',
+      },
+      openrouter: {
+        icon: '🌐',
+        tokenUrl: 'https://openrouter.ai/keys',
+        tokenLabel: 'Pegar token OpenRouter',
+        description: 'Gateway com várias IAs e alguns modelos free em um só token.',
+        placeholder: 'sk-or-...',
+      },
+      mistral: {
+        icon: '🌪️',
+        tokenUrl: 'https://console.mistral.ai/api-keys',
+        tokenLabel: 'Pegar token Mistral',
+        description: 'Modelos europeus rápidos, bons para texto e código.',
+        placeholder: '...',
+      },
+      deepseek: {
+        icon: '🔎',
+        tokenUrl: 'https://platform.deepseek.com/api_keys',
+        tokenLabel: 'Pegar token DeepSeek',
+        description: 'Boa opção para código, raciocínio e custo competitivo.',
+        placeholder: 'sk-...',
+      },
+      together: {
+        icon: '🧩',
+        tokenUrl: 'https://api.together.ai/settings/api-keys',
+        tokenLabel: 'Pegar token Together',
+        description: 'Vários modelos open source hospedados em API.',
+        placeholder: '...',
+      },
+      cerebras: {
+        icon: '🚀',
+        tokenUrl: 'https://cloud.cerebras.ai/platform/',
+        tokenLabel: 'Pegar token Cerebras',
+        description: 'Foco em velocidade para modelos Llama.',
+        placeholder: '...',
+      },
+      huggingface: {
+        icon: '🤗',
+        tokenUrl: 'https://huggingface.co/settings/tokens',
+        tokenLabel: 'Pegar token Hugging Face',
+        description: 'Acesso a modelos da comunidade via token HF.',
+        placeholder: 'hf_...',
+      },
+    };
 
     const tourSteps = [
       ['Escolha a IA', 'Na esquerda você escolhe o provider. Se Ollama estiver cinza ou der erro, ele não está rodando. Use Configurações para ligar outra IA.'],
@@ -964,6 +1113,55 @@
       $('mainInput').focus();
     }
 
+    function inputWithAttachments() {
+      const input = $('mainInput').value.trim();
+      if (!state.attachments.length) return input;
+      const attachmentsText = state.attachments.map(file => `
+
+ANEXO: ${file.name}
+TIPO: ${file.type || 'texto'}
+CONTEÚDO:
+${file.content}`).join('\n');
+      return `${input}\n\n--- ANEXOS DO USUÁRIO ---${attachmentsText}`;
+    }
+
+    function renderAttachments() {
+      const target = $('attachmentList');
+      if (!target) return;
+      target.innerHTML = state.attachments.map((file, index) => `
+        <span class="attachment-chip">
+          ${escapeHtml(file.name)} · ${Math.round(file.content.length / 1024) || 1}KB
+          <button class="btn" style="padding:2px 7px;margin-left:6px" onclick="removeAttachment(${index})">x</button>
+        </span>
+      `).join('');
+    }
+
+    function removeAttachment(index) {
+      state.attachments.splice(index, 1);
+      renderAttachments();
+      schedulePreview();
+    }
+
+    async function handleFiles(files) {
+      const maxChars = 12000;
+      const accepted = [];
+      for (const file of Array.from(files || [])) {
+        if (file.size > 1024 * 1024) {
+          alert(`${file.name} é grande demais. Use arquivos até 1MB por enquanto.`);
+          continue;
+        }
+        const content = await file.text();
+        accepted.push({
+          name: file.name,
+          type: file.type || 'text/plain',
+          content: content.slice(0, maxChars),
+        });
+      }
+      state.attachments = [...state.attachments, ...accepted].slice(0, 6);
+      renderAttachments();
+      schedulePreview();
+    }
+
     function showSetup() {
       $('setup').classList.remove('hidden');
       $('app').classList.add('hidden');
@@ -979,7 +1177,10 @@
       state.providers = data.providers;
       const firstConfigured = state.providers.find(p => p.configured);
       state.activeProvider = state.activeProvider || (firstConfigured ? firstConfigured.id : 'ollama');
-      state.activeModel = choosePreferredModel(firstConfigured?.models || []);
+      const active = state.providers.find(p => p.id === state.activeProvider) || firstConfigured;
+      if (!state.activeModel || !(active?.models || []).includes(state.activeModel)) {
+        state.activeModel = choosePreferredModel(active?.models || []);
+      }
       renderProviders();
     }
 
@@ -993,23 +1194,37 @@
 
     function renderProviderCards(targetId) {
       $(targetId).innerHTML = state.providers.map(provider => {
+        const info = providerInfo[provider.id] || {};
         const status = provider.configured ? '🟢 CONFIGURADO' : provider.available ? '🟡 DISPONÍVEL' : '⚪ API KEY';
         const badgeClass = provider.configured ? 'green' : provider.available ? 'yellow' : '';
         const models = provider.models.length ? provider.models.join(', ') : 'nenhum modelo detectado';
+        const selectedModel = provider.id === state.activeProvider ? state.activeModel : choosePreferredModel(provider.models);
+        const modelBox = provider.configured && provider.models.length ? `
+          <div class="model-row">
+            <label class="muted mono" for="${targetId}-${provider.id}-model">Modelo</label>
+            <select id="${targetId}-${provider.id}-model" onchange="useProvider('${provider.id}', this.value)">
+              ${provider.models.map(model => `<option value="${model}" ${model === selectedModel ? 'selected' : ''}>${model}</option>`).join('')}
+            </select>
+          </div>` : '';
         const keyBox = provider.is_local ? '' : `
           <div class="key-row">
             <input id="${targetId}-${provider.id}-key" type="password" placeholder="${placeholder(provider.id)}">
             <button class="btn" onclick="saveKey('${targetId}','${provider.id}')">Salvar</button>
           </div>`;
-        const useButton = provider.configured ? `<button class="btn" onclick="useProvider('${provider.id}')">Usar como padrão</button>` : '';
+        const useButton = provider.configured ? `<button class="btn" onclick="useProvider('${provider.id}', '${selectedModel || ''}')">Usar como padrão</button>` : '';
         return `
           <div class="provider-card">
             <div class="provider-top">
-              <span class="provider-name">${provider.name}</span>
+              <span class="provider-name"><span class="provider-icon">${info.icon || '🤖'}</span>${provider.name}</span>
               <span class="badge ${badgeClass}">${status}${provider.free ? ' · FREE' : ''}</span>
             </div>
             <div class="muted mono">${provider.is_local ? 'LOCAL · GRÁTIS' : 'API KEY'}</div>
+            <div class="provider-help">
+              <div>${info.description || 'Configure a API key oficial para usar este provider.'}</div>
+              ${info.tokenUrl ? `<a href="${info.tokenUrl}" target="_blank" rel="noreferrer">${info.tokenLabel || 'Pegar token oficial'} →</a>` : ''}
+            </div>
             <div class="muted" style="margin-top:8px">${models}</div>
+            ${modelBox}
             ${keyBox}
             <div style="margin-top:10px">${useButton}</div>
           </div>`;
@@ -1083,7 +1298,7 @@
     }
 
     function placeholder(provider) {
-      return { claude: 'sk-ant-...', groq: 'gsk_...', openai: 'sk-...', gemini: 'AIza...' }[provider] || 'API key';
+      return providerInfo[provider]?.placeholder || 'API key';
     }
 
     async function saveKey(targetId, provider) {
@@ -1099,11 +1314,14 @@
       await refreshProviders();
     }
 
-    function useProvider(provider) {
+    function useProvider(provider, model = '') {
       state.activeProvider = provider;
       const selected = state.providers.find(p => p.id === provider);
-      state.activeModel = choosePreferredModel(selected?.models || []);
+      state.activeModel = model || choosePreferredModel(selected?.models || []);
       renderProviderSelect();
+      renderProviderCards('setupProviders');
+      renderProviderCards('settingsProviders');
+      renderProviderList();
       showApp();
     }
 
@@ -1130,6 +1348,9 @@
         state.activeProvider = provider.id;
         state.activeModel = choosePreferredModel(provider.models || []);
         renderModelSelect();
+        renderProviderCards('setupProviders');
+        renderProviderCards('settingsProviders');
+        renderProviderList();
       };
       $('modelSelect').onchange = (event) => {
         state.activeModel = event.target.value;
@@ -1144,6 +1365,8 @@
         }
       });
       $('sendBtn').onclick = send;
+      $('attachBtn').onclick = () => $('fileInput').click();
+      $('fileInput').onchange = (event) => handleFiles(event.target.files);
       $('regenBtn').onclick = send;
       $('copyPromptBtn').onclick = () => copyText(state.preview?.prompt || '');
       $('copyResponseBtn').onclick = () => copyText(state.lastResponse);
@@ -1170,7 +1393,7 @@
     }
 
     async function preview() {
-      const input = $('mainInput').value.trim();
+      const input = inputWithAttachments();
       if (!input) return;
       state.lastInput = input;
       state.preview = await api('/api/engineer', {
@@ -1202,6 +1425,7 @@
         create_website: '🌐 Site',
         build_software: '💻 Software',
         open_creative: '✨ Criativo',
+        direct_answer: '✅ Resposta direta',
         general_assistance: '💬 Assistência',
       }[intent] || `🎯 ${intent}`;
     }
@@ -1232,7 +1456,7 @@
     }
 
     async function send() {
-      const input = $('mainInput').value.trim();
+      const input = inputWithAttachments();
       if (!input) return;
       renderWorkingState('Preparando seu pedido', [
         'Lendo o que você escreveu...',
@@ -1241,8 +1465,9 @@
       ]);
       if (!state.preview || state.preview.input !== input) await preview();
       const provider = state.activeProvider || $('providerSelect').value;
+      const model = state.activeModel || 'modelo padrão';
       renderWorkingState('Estamos trabalhando nisso', [
-        `Chamando ${providerLabel(provider)}...`,
+        `Chamando ${providerLabel(provider)} com ${model}...`,
         'Aguardando a IA ler o prompt melhorado...',
         'Processando a resposta para mostrar aqui...'
       ]);
@@ -1275,10 +1500,13 @@
 
     function renderChatError(message) {
       const isOllama = message.toLowerCase().includes('ollama') || message.includes('11434');
+      const provider = state.activeProvider || $('providerSelect').value || 'provider';
+      const model = state.activeModel || 'modelo padrão';
       $('responseBox').innerHTML = `
         <div class="soft-warning">
           <strong>${isOllama ? 'Ainda não consegui falar com o Ollama' : 'A IA ainda não respondeu'}</strong>
           <div>${escapeHtml(message)}</div>
+          <div class="mono">Tentativa: provider=${escapeHtml(providerLabel(provider))} · modelo=${escapeHtml(model)}</div>
           <div>${isOllama
             ? 'Isso normalmente significa que o Ollama não está aberto, parou de responder, ou o modelo local está ocupado. Você pode iniciar o Ollama ou escolher outra IA para receber resposta agora.'
             : 'Verifique se o provider está configurado. Se precisar de resposta imediata, escolha outro provider disponível.'}</div>
@@ -1418,6 +1646,12 @@
         groq: 'Groq',
         openai: 'OpenAI',
         gemini: 'Gemini',
+        openrouter: 'OpenRouter',
+        mistral: 'Mistral AI',
+        deepseek: 'DeepSeek',
+        together: 'Together AI',
+        cerebras: 'Cerebras',
+        huggingface: 'Hugging Face',
       }[provider] || provider;
     }
 

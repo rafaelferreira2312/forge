@@ -245,7 +245,21 @@ async fn save_provider_key(
     let provider = request.provider.trim().to_lowercase();
     let key = request.key.trim().to_string();
 
-    if key.is_empty() || !matches!(provider.as_str(), "claude" | "groq" | "openai" | "gemini") {
+    if key.is_empty()
+        || !matches!(
+            provider.as_str(),
+            "claude"
+                | "groq"
+                | "openai"
+                | "gemini"
+                | "openrouter"
+                | "mistral"
+                | "deepseek"
+                | "together"
+                | "cerebras"
+                | "huggingface"
+        )
+    {
         return Err((StatusCode::BAD_REQUEST, "invalid provider or empty key"));
     }
 
@@ -296,11 +310,12 @@ async fn chat(
         "ollama" => call_ollama(&state.http, &request.prompt, request.model.as_deref())
             .await
             .map_err(ollama_error_message),
-        "claude" | "groq" | "openai" | "gemini" => {
+        "claude" | "groq" | "openai" | "gemini" | "openrouter" | "mistral" | "deepseek"
+        | "together" | "cerebras" | "huggingface" => {
             let Some(key) = provider_key(&state.db, &provider).await else {
                 return Err((
                     StatusCode::BAD_REQUEST,
-                    "provider is not configured".to_string(),
+                    format!("{provider} ainda não está configurado. Abra Configurações, cole a API key oficial e escolha um modelo."),
                 ));
             };
             call_remote_provider(
@@ -386,7 +401,11 @@ async fn load_providers(state: &AppState) -> ProvidersResponse {
             "Claude (Anthropic)",
             env_or_saved_key("ANTHROPIC_API_KEY", "claude", &saved),
             false,
-            vec!["claude-3-5-haiku-latest".to_string()],
+            vec![
+                "claude-3-5-haiku-latest".to_string(),
+                "claude-3-5-sonnet-latest".to_string(),
+                "claude-3-opus-latest".to_string(),
+            ],
             false,
         ),
         provider_status(
@@ -394,7 +413,12 @@ async fn load_providers(state: &AppState) -> ProvidersResponse {
             "Groq",
             env_or_saved_key("GROQ_API_KEY", "groq", &saved),
             false,
-            vec!["llama-3.1-8b-instant".to_string()],
+            vec![
+                "llama-3.1-8b-instant".to_string(),
+                "llama-3.3-70b-versatile".to_string(),
+                "mixtral-8x7b-32768".to_string(),
+                "gemma2-9b-it".to_string(),
+            ],
             true,
         ),
         provider_status(
@@ -402,7 +426,12 @@ async fn load_providers(state: &AppState) -> ProvidersResponse {
             "OpenAI",
             env_or_saved_key("OPENAI_API_KEY", "openai", &saved),
             false,
-            vec!["gpt-4o-mini".to_string()],
+            vec![
+                "gpt-4o-mini".to_string(),
+                "gpt-4o".to_string(),
+                "gpt-4.1-mini".to_string(),
+                "gpt-4.1".to_string(),
+            ],
             false,
         ),
         provider_status(
@@ -410,8 +439,80 @@ async fn load_providers(state: &AppState) -> ProvidersResponse {
             "Gemini (Google)",
             env_or_saved_key("GEMINI_API_KEY", "gemini", &saved),
             false,
-            vec!["gemini-1.5-flash".to_string()],
+            vec![
+                "gemini-1.5-flash".to_string(),
+                "gemini-1.5-pro".to_string(),
+                "gemini-2.0-flash".to_string(),
+            ],
             false,
+        ),
+        provider_status(
+            "openrouter",
+            "OpenRouter",
+            env_or_saved_key("OPENROUTER_API_KEY", "openrouter", &saved),
+            false,
+            vec![
+                "meta-llama/llama-3.1-8b-instruct:free".to_string(),
+                "qwen/qwen-2.5-coder-32b-instruct".to_string(),
+                "google/gemini-flash-1.5".to_string(),
+                "anthropic/claude-3.5-haiku".to_string(),
+            ],
+            true,
+        ),
+        provider_status(
+            "mistral",
+            "Mistral AI",
+            env_or_saved_key("MISTRAL_API_KEY", "mistral", &saved),
+            false,
+            vec![
+                "mistral-small-latest".to_string(),
+                "mistral-large-latest".to_string(),
+                "codestral-latest".to_string(),
+            ],
+            false,
+        ),
+        provider_status(
+            "deepseek",
+            "DeepSeek",
+            env_or_saved_key("DEEPSEEK_API_KEY", "deepseek", &saved),
+            false,
+            vec![
+                "deepseek-chat".to_string(),
+                "deepseek-reasoner".to_string(),
+            ],
+            false,
+        ),
+        provider_status(
+            "together",
+            "Together AI",
+            env_or_saved_key("TOGETHER_API_KEY", "together", &saved),
+            false,
+            vec![
+                "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo".to_string(),
+                "meta-llama/Llama-3.3-70B-Instruct-Turbo".to_string(),
+                "Qwen/Qwen2.5-Coder-32B-Instruct".to_string(),
+            ],
+            false,
+        ),
+        provider_status(
+            "cerebras",
+            "Cerebras",
+            env_or_saved_key("CEREBRAS_API_KEY", "cerebras", &saved),
+            false,
+            vec!["llama3.1-8b".to_string(), "llama3.3-70b".to_string()],
+            true,
+        ),
+        provider_status(
+            "huggingface",
+            "Hugging Face",
+            env_or_saved_key("HF_TOKEN", "huggingface", &saved),
+            false,
+            vec![
+                "Qwen/Qwen2.5-Coder-32B-Instruct".to_string(),
+                "meta-llama/Llama-3.1-8B-Instruct".to_string(),
+                "mistralai/Mistral-7B-Instruct-v0.3".to_string(),
+            ],
+            true,
         ),
     ];
 
@@ -476,6 +577,12 @@ async fn provider_key(db: &SqlitePool, provider: &str) -> Option<String> {
         "groq" => "GROQ_API_KEY",
         "openai" => "OPENAI_API_KEY",
         "gemini" => "GEMINI_API_KEY",
+        "openrouter" => "OPENROUTER_API_KEY",
+        "mistral" => "MISTRAL_API_KEY",
+        "deepseek" => "DEEPSEEK_API_KEY",
+        "together" => "TOGETHER_API_KEY",
+        "cerebras" => "CEREBRAS_API_KEY",
+        "huggingface" => "HF_TOKEN",
         _ => return None,
     };
 
@@ -583,6 +690,72 @@ async fn call_remote_provider(
                 model.unwrap_or("gpt-4o-mini"),
                 prompt,
                 "openai",
+            )
+            .await
+        }
+        "openrouter" => {
+            call_openai_compatible(
+                http,
+                "https://openrouter.ai/api/v1/chat/completions",
+                key,
+                model.unwrap_or("meta-llama/llama-3.1-8b-instruct:free"),
+                prompt,
+                "openrouter",
+            )
+            .await
+        }
+        "mistral" => {
+            call_openai_compatible(
+                http,
+                "https://api.mistral.ai/v1/chat/completions",
+                key,
+                model.unwrap_or("mistral-small-latest"),
+                prompt,
+                "mistral",
+            )
+            .await
+        }
+        "deepseek" => {
+            call_openai_compatible(
+                http,
+                "https://api.deepseek.com/chat/completions",
+                key,
+                model.unwrap_or("deepseek-chat"),
+                prompt,
+                "deepseek",
+            )
+            .await
+        }
+        "together" => {
+            call_openai_compatible(
+                http,
+                "https://api.together.xyz/v1/chat/completions",
+                key,
+                model.unwrap_or("meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"),
+                prompt,
+                "together",
+            )
+            .await
+        }
+        "cerebras" => {
+            call_openai_compatible(
+                http,
+                "https://api.cerebras.ai/v1/chat/completions",
+                key,
+                model.unwrap_or("llama3.1-8b"),
+                prompt,
+                "cerebras",
+            )
+            .await
+        }
+        "huggingface" => {
+            call_openai_compatible(
+                http,
+                "https://router.huggingface.co/v1/chat/completions",
+                key,
+                model.unwrap_or("Qwen/Qwen2.5-Coder-32B-Instruct"),
+                prompt,
+                "huggingface",
             )
             .await
         }
