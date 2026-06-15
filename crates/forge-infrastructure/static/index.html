@@ -974,6 +974,60 @@
     </div>
   </div>
 
+  <div id="installAiModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2>🔥 Bem-vindo ao Forge</h2>
+          <p class="muted">Nenhuma IA configurada ainda. Escolha uma opção para começar em poucos minutos.</p>
+        </div>
+        <button class="btn" onclick="skipAiSetup()">Configurar depois</button>
+      </div>
+
+      <div class="provider-card" style="border-left:3px solid var(--ember);margin-bottom:16px">
+        <div class="provider-top">
+          <span class="provider-name">Ollama — IA Local</span>
+          <span class="badge green">GRÁTIS · OFFLINE</span>
+        </div>
+        <p class="muted">Roda na sua máquina. Sem conta, sem API key, sem custo. Se o Ollama já estiver instalado, o Forge baixa o modelo escolhido.</p>
+        <div id="ollamaInstallCmd" class="json-preview" style="max-height:none;margin:12px 0">curl -fsSL https://ollama.ai/install.sh | sh</div>
+        <div class="side-title">Escolha o modelo</div>
+        <div class="grid">
+          <label class="file-item"><input type="radio" name="ollama-model" value="phi3:mini"> <strong>phi3:mini</strong> <span class="muted mono">~2GB RAM · leve</span></label>
+          <label class="file-item"><input type="radio" name="ollama-model" value="llama3.2:3b" checked> <strong>llama3.2:3b</strong> <span class="muted mono">~4GB RAM · recomendado</span></label>
+          <label class="file-item"><input type="radio" name="ollama-model" value="llama3.1:8b"> <strong>llama3.1:8b</strong> <span class="muted mono">~8GB RAM · melhor qualidade</span></label>
+          <label class="file-item"><input type="radio" name="ollama-model" value="deepseek-r1:7b"> <strong>deepseek-r1:7b</strong> <span class="muted mono">~8GB RAM · raciocínio</span></label>
+        </div>
+        <button class="btn primary" style="width:100%;margin-top:14px" onclick="installOllamaFromModal()">Baixar modelo no Ollama</button>
+        <div id="ollamaInstallStatus" class="run-hint hidden"></div>
+      </div>
+
+      <div class="provider-card" style="margin-bottom:16px">
+        <div class="provider-top">
+          <span class="provider-name">Groq Cloud</span>
+          <span class="badge green">FREE TIER</span>
+        </div>
+        <p class="muted">Roda na nuvem, é rápido e tem cadastro gratuito. Pegue a chave em <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer">console.groq.com/keys</a>.</p>
+        <div class="key-row">
+          <input type="password" id="installGroqKey" placeholder="gsk_...">
+          <button class="btn" onclick="saveInstallKey('groq','installGroqKey')">Salvar Groq</button>
+        </div>
+      </div>
+
+      <div class="provider-card">
+        <div class="provider-top">
+          <span class="provider-name">Claude (Anthropic)</span>
+          <span class="badge">PAGO · QUALIDADE</span>
+        </div>
+        <p class="muted">Boa opção para texto complexo e código. Pegue a chave em <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer">console.anthropic.com/settings/keys</a>.</p>
+        <div class="key-row">
+          <input type="password" id="installClaudeKey" placeholder="sk-ant-...">
+          <button class="btn" onclick="saveInstallKey('claude','installClaudeKey')">Salvar Claude</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="statsModal" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">
@@ -1211,6 +1265,7 @@
       renderExpertiseButtons('settingsExpertise');
       renderExpertiseSelect();
       renderFileLibrary();
+      updateInstallAiCommand();
       await refreshProviders();
       await refreshHistory();
       bindEvents();
@@ -1325,6 +1380,83 @@ ${file.content}`).join('\n');
         state.activeModel = choosePreferredModel(active?.models || []);
       }
       renderProviders();
+      maybeShowInstallAiModal(data.first_run);
+    }
+
+    function maybeShowInstallAiModal(firstRun) {
+      const hasProvider = state.providers.some(provider => provider.configured || provider.available);
+      const skipped = sessionStorage.getItem('forgeAiSetupSkipped') === '1';
+      if ((firstRun || !hasProvider) && !skipped) {
+        $('installAiModal').classList.remove('hidden');
+      }
+    }
+
+    function updateInstallAiCommand() {
+      const target = $('ollamaInstallCmd');
+      if (!target) return;
+      const ua = navigator.userAgent.toLowerCase();
+      if (ua.includes('win')) {
+        target.textContent = 'choco install ollama  # PowerShell como Admin';
+      } else if (ua.includes('mac')) {
+        target.textContent = 'brew install ollama';
+      } else {
+        target.textContent = 'curl -fsSL https://ollama.ai/install.sh | sh';
+      }
+    }
+
+    async function installOllamaFromModal() {
+      const model = document.querySelector('input[name="ollama-model"]:checked')?.value || 'llama3.2:3b';
+      const status = $('ollamaInstallStatus');
+      status.classList.remove('hidden');
+      status.style.color = 'var(--yellow)';
+      status.textContent = `Solicitando download do modelo ${model}...`;
+
+      try {
+        const result = await api('/api/install/ollama-model', {
+          method: 'POST',
+          body: JSON.stringify({ model }),
+        });
+        if (result.success) {
+          status.style.color = 'var(--green)';
+          status.textContent = `${result.message} Aguarde o download terminar e clique em atualizar providers.`;
+          setTimeout(checkProvidersAndCloseInstall, 1800);
+        } else {
+          status.style.color = 'var(--ember)';
+          status.textContent = result.message;
+        }
+      } catch (error) {
+        status.style.color = 'var(--ember)';
+        status.textContent = `Erro de conexão: ${error.message}`;
+      }
+    }
+
+    async function saveInstallKey(provider, inputId) {
+      const input = $(inputId);
+      const key = input.value.trim();
+      if (!key || key.length < 10) {
+        alert('Key inválida.');
+        return;
+      }
+      const result = await api('/api/providers/key', {
+        method: 'POST',
+        body: JSON.stringify({ provider, key }),
+      });
+      input.value = '';
+      alert(result.message);
+      await checkProvidersAndCloseInstall();
+    }
+
+    async function checkProvidersAndCloseInstall() {
+      await refreshProviders();
+      if (state.providers.some(provider => provider.configured || provider.available)) {
+        $('installAiModal').classList.add('hidden');
+        showApp();
+      }
+    }
+
+    function skipAiSetup() {
+      sessionStorage.setItem('forgeAiSetupSkipped', '1');
+      $('installAiModal').classList.add('hidden');
     }
 
     function renderProviders() {
