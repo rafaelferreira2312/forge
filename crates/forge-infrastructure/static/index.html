@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FORGE — Rust Prompt Engineer</title>
+  <link rel="icon" type="image/png" href="assets/forge-logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
@@ -56,7 +57,15 @@
 
     .hidden { display: none !important; }
     .mono { font-family: "JetBrains Mono", monospace; }
-    .brand { color: var(--ember); font-family: "Space Grotesk", sans-serif; font-weight: 800; letter-spacing: 0.08em; }
+    .brand { color: var(--ember); font-family: "Space Grotesk", sans-serif; font-weight: 800; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 10px; }
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid rgba(255,69,0,0.35);
+      box-shadow: 0 0 20px rgba(255,69,0,0.22);
+    }
 
     .setup {
       min-height: 100vh;
@@ -72,6 +81,10 @@
       border-radius: 18px;
       padding: 32px;
       box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+    }
+
+    .modal-card {
+      width: min(1120px, 100%);
     }
 
     .setup-title {
@@ -248,6 +261,81 @@
       color: var(--text);
       border-color: var(--ember);
       cursor: pointer;
+    }
+
+    .sidebar-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .sidebar-tab.active,
+    .settings-tab.active {
+      border-color: var(--ember);
+      color: var(--ember);
+      background: rgba(255,69,0,0.08);
+    }
+
+    .sidebar-panel,
+    .settings-section {
+      display: none;
+    }
+
+    .sidebar-panel.active,
+    .settings-section.active {
+      display: block;
+    }
+
+    .folder-card {
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      background: color-mix(in srgb, var(--surface2) 42%, var(--bg));
+    }
+
+    .folder-title {
+      color: var(--text);
+      font: 800 13px "Space Grotesk", sans-serif;
+      margin-bottom: 8px;
+    }
+
+    .subfolder-title {
+      color: var(--muted);
+      font: 11px "JetBrains Mono", monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 8px 0;
+    }
+
+    .file-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .file-item {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px;
+      color: var(--dim);
+      background: color-mix(in srgb, var(--surface2) 50%, var(--bg));
+      font-size: 13px;
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.8fr) minmax(280px, 1.2fr);
+      gap: 16px;
+      align-items: start;
+      margin: 16px 0;
+    }
+
+    .settings-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      background: var(--surface2);
     }
 
     .preview {
@@ -717,6 +805,7 @@
     @media (max-width: 860px) {
       .layout { grid-template-columns: 1fr; }
       .workbench { grid-template-columns: 1fr; }
+      .settings-grid { grid-template-columns: 1fr; }
       .response-column { position: static; }
       .response-box { min-height: 260px; max-height: 420px; }
       .guide-panel { grid-template-columns: 1fr; }
@@ -732,7 +821,7 @@
 <body data-theme="dark">
   <section id="setup" class="setup hidden">
     <div class="setup-card">
-      <div class="brand">FORGE</div>
+      <div class="brand"><img class="brand-logo" src="assets/forge-logo.png" alt="">FORGE</div>
       <h1 class="setup-title">Configuração inicial</h1>
       <p class="muted">Detectamos o seguinte na sua máquina. Configure ao menos um provider para começar.</p>
       <div id="setupProviders" class="grid provider-grid"></div>
@@ -744,7 +833,7 @@
 
   <section id="app" class="app hidden">
     <nav>
-      <div class="brand">🔥 FORGE</div>
+      <div class="brand"><img class="brand-logo" src="assets/forge-logo.png" alt="">FORGE</div>
       <div class="nav-actions">
         <button id="themeBtn" class="btn">☀ Claro</button>
         <button id="settingsBtn" class="btn">⚙ Configurações</button>
@@ -756,24 +845,20 @@
     <div class="layout">
       <aside>
         <div class="side-section">
-          <div class="side-title">Provider ativo</div>
-          <select id="providerSelect"></select>
-        </div>
-        <div class="side-section">
-          <div class="side-title">Modelo</div>
-          <select id="modelSelect"></select>
-        </div>
-        <div class="side-section">
           <div class="side-title">Nível de conhecimento</div>
           <select id="expertiseSelect"></select>
         </div>
-        <div class="side-section">
-          <div class="side-title">Detectado</div>
-          <div id="providerList" class="provider-list"></div>
+        <div class="sidebar-tabs">
+          <button class="btn sidebar-tab active" data-sidebar="conversations">Conversas</button>
+          <button class="btn sidebar-tab" data-sidebar="files">Arquivos</button>
         </div>
-        <div class="side-section">
-          <div class="side-title">Histórico</div>
+        <div id="sidebar-conversations" class="sidebar-panel active">
+          <div class="side-title">Pastas</div>
           <div id="historyList" class="history-list"></div>
+        </div>
+        <div id="sidebar-files" class="sidebar-panel">
+          <div class="side-title">Arquivos e mídias</div>
+          <div id="fileLibrary" class="file-list"></div>
         </div>
       </aside>
 
@@ -846,12 +931,46 @@
         <h2>Configurações</h2>
         <button class="btn" data-close="settingsModal">Fechar</button>
       </div>
-      <div class="side-title">Providers</div>
-      <div id="settingsProviders" class="grid provider-grid"></div>
-      <div class="side-title">Nível de conhecimento</div>
-      <div id="settingsExpertise" class="expertise-buttons"></div>
-      <div class="side-title">Sobre</div>
-      <p class="muted">FORGE roda localmente em Rust. API keys ficam no SQLite local do projeto. Escolha a IA e o modelo neste painel; se uma IA falhar, troque para outra configurada sem perder o prompt.</p>
+      <div class="guide-tabs">
+        <button class="btn settings-tab active" data-settings="ai">IA e modelos</button>
+        <button class="btn settings-tab" data-settings="providers">Chaves</button>
+        <button class="btn settings-tab" data-settings="knowledge">Conhecimento</button>
+        <button class="btn settings-tab" data-settings="files">Arquivos</button>
+        <button class="btn settings-tab" data-settings="about">Sistema</button>
+      </div>
+      <section id="settings-ai" class="settings-section active">
+        <div class="settings-grid">
+          <div class="settings-card">
+            <div class="side-title">Provider ativo</div>
+            <select id="providerSelect"></select>
+            <div class="side-title" style="margin-top:16px">Modelo</div>
+            <select id="modelSelect"></select>
+            <div id="providerList" class="provider-list" style="margin-top:16px"></div>
+          </div>
+          <div class="settings-card">
+            <p class="guide-title">Escolha quem responde</p>
+            <p class="muted">O Forge monta o prompt. A IA escolhida aqui gera a resposta. Se uma falhar, troque provider/modelo e envie novamente.</p>
+            <div id="activeProviderHelp" class="run-hint">Carregando provider...</div>
+          </div>
+        </div>
+      </section>
+      <section id="settings-providers" class="settings-section">
+        <div class="side-title">Chaves e providers</div>
+        <div id="settingsProviders" class="grid provider-grid"></div>
+      </section>
+      <section id="settings-knowledge" class="settings-section">
+        <div class="side-title">Nível de conhecimento</div>
+        <div id="settingsExpertise" class="expertise-buttons"></div>
+      </section>
+      <section id="settings-files" class="settings-section">
+        <p class="guide-title">Arquivos e mídias</p>
+        <p class="muted">Arquivos anexados ficam visíveis na aba esquerda. Por enquanto, o Forge lê texto/código e usa no prompt; mídia gerada entrará aqui quando o endpoint de geração estiver pronto.</p>
+        <div id="settingsFileLibrary" class="file-list"></div>
+      </section>
+      <section id="settings-about" class="settings-section">
+        <p class="guide-title">Sistema</p>
+        <p class="muted">FORGE roda localmente em Rust. API keys ficam no SQLite local do projeto. Suas informações de autor continuam apenas no rodapé da tela principal.</p>
+      </section>
     </div>
   </div>
 
@@ -1067,8 +1186,8 @@
     };
 
     const tourSteps = [
-      ['Escolha a IA', 'Na esquerda você escolhe o provider. Se Ollama estiver cinza ou der erro, ele não está rodando. Use Configurações para ligar outra IA.'],
-      ['Escolha o modelo', 'Para Ollama, prefira qwen2.5-coder:7b ou llama3.1:8b. Modelos maiores podem demorar e parecer travados.'],
+      ['Escolha a IA', 'Abra Configurações para escolher provider e modelo. Se Ollama estiver cinza ou der erro, ele não está rodando.'],
+      ['Organize conversas', 'Na esquerda ficam as conversas por pastas e a biblioteca de arquivos enviados.'],
       ['Digite seu pedido', 'A tela principal fica pronta para escrever. Você não precisa saber prompt engineering.'],
       ['Veja a detecção', 'Os badges mostram o que o Forge entendeu antes de enviar para a IA.'],
       ['Envie e aprenda', 'Clique Enviar. Se der erro, o Forge deve explicar o motivo e sugerir o próximo caminho.'],
@@ -1091,6 +1210,7 @@
       renderExpertiseButtons('setupExpertise');
       renderExpertiseButtons('settingsExpertise');
       renderExpertiseSelect();
+      renderFileLibrary();
       await refreshProviders();
       await refreshHistory();
       bindEvents();
@@ -1134,6 +1254,29 @@ ${file.content}`).join('\n');
           <button class="btn" style="padding:2px 7px;margin-left:6px" onclick="removeAttachment(${index})">x</button>
         </span>
       `).join('');
+      renderFileLibrary();
+    }
+
+    function renderFileLibrary() {
+      const sent = state.attachments.length ? state.attachments.map((file, index) => `
+          <div class="file-item">
+            <strong>${escapeHtml(file.name)}</strong>
+            <div class="muted mono">${escapeHtml(file.type || 'texto')} · ${Math.round(file.content.length / 1024) || 1}KB</div>
+            <button class="btn" style="margin-top:8px" onclick="removeAttachment(${index})">Remover</button>
+          </div>
+        `).join('') : '<div class="muted">Nenhum arquivo enviado ainda. Use o botão 📎 Arquivo no pedido.</div>';
+      const markup = `
+        <div class="folder-card">
+          <div class="folder-title">📁 Enviados pelo usuário</div>
+          ${sent}
+        </div>
+        <div class="folder-card">
+          <div class="folder-title">📁 Mídias geradas pelo Forge</div>
+          <div class="muted">Quando o Forge gerar imagens, vídeos, áudios ou documentos, eles aparecerão aqui.</div>
+        </div>
+      `;
+      if ($('fileLibrary')) $('fileLibrary').innerHTML = markup;
+      if ($('settingsFileLibrary')) $('settingsFileLibrary').innerHTML = markup;
     }
 
     function removeAttachment(index) {
@@ -1189,6 +1332,7 @@ ${file.content}`).join('\n');
       renderProviderCards('settingsProviders');
       renderProviderSelect();
       renderProviderList();
+      renderActiveProviderHelp();
       $('startBtn').disabled = !state.providers.some(p => p.configured);
     }
 
@@ -1262,6 +1406,21 @@ ${file.content}`).join('\n');
         </div>
       `).join('');
       renderProviderStatus();
+      renderActiveProviderHelp();
+    }
+
+    function renderActiveProviderHelp() {
+      const target = $('activeProviderHelp');
+      if (!target) return;
+      const provider = state.providers.find(p => p.id === state.activeProvider);
+      if (!provider) return;
+      const info = providerInfo[provider.id] || {};
+      target.innerHTML = `
+        <strong>${escapeHtml(provider.name)}</strong><br>
+        ${escapeHtml(info.description || 'Provider configurado para responder.')}<br>
+        <span class="mono">Modelo: ${escapeHtml(state.activeModel || choosePreferredModel(provider.models) || 'padrão')}</span>
+        ${info.tokenUrl ? `<br><a href="${info.tokenUrl}" target="_blank" rel="noreferrer">${info.tokenLabel || 'Abrir site oficial'} →</a>` : ''}
+      `;
     }
 
     function renderProviderStatus() {
@@ -1322,6 +1481,7 @@ ${file.content}`).join('\n');
       renderProviderCards('setupProviders');
       renderProviderCards('settingsProviders');
       renderProviderList();
+      renderActiveProviderHelp();
       showApp();
     }
 
@@ -1382,9 +1542,25 @@ ${file.content}`).join('\n');
       document.querySelectorAll('.guide-tab').forEach(btn => {
         btn.onclick = () => showGuideSection(btn.dataset.guide);
       });
+      document.querySelectorAll('.sidebar-tab').forEach(btn => {
+        btn.onclick = () => showSidebarPanel(btn.dataset.sidebar);
+      });
+      document.querySelectorAll('.settings-tab').forEach(btn => {
+        btn.onclick = () => showSettingsSection(btn.dataset.settings);
+      });
       document.querySelectorAll('[data-close]').forEach(btn => {
         btn.onclick = () => $(btn.dataset.close).classList.add('hidden');
       });
+    }
+
+    function showSidebarPanel(section) {
+      document.querySelectorAll('.sidebar-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.sidebar === section));
+      document.querySelectorAll('.sidebar-panel').forEach(panel => panel.classList.toggle('active', panel.id === `sidebar-${section}`));
+    }
+
+    function showSettingsSection(section) {
+      document.querySelectorAll('.settings-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.settings === section));
+      document.querySelectorAll('.settings-section').forEach(panel => panel.classList.toggle('active', panel.id === `settings-${section}`));
     }
 
     function schedulePreview() {
@@ -1538,12 +1714,29 @@ ${file.content}`).join('\n');
     async function refreshHistory() {
       try {
         const history = await api('/api/history?limit=20');
-        $('historyList').innerHTML = history.map(item => `
-          <div class="history-item" onclick="loadHistory('${encodeURIComponent(item.input)}')">
-            ${escapeHtml(item.input.slice(0, 35))}${item.input.length > 35 ? '...' : ''}
+        const today = history.slice(0, 8);
+        const recent = history.slice(8);
+        $('historyList').innerHTML = history.length ? `
+          <div class="folder-card">
+            <div class="folder-title">📁 Conversas do dia</div>
+            <div class="subfolder-title">Hoje</div>
+            ${today.map(item => conversationItem(item)).join('')}
           </div>
-        `).join('') || '<div class="muted">Sem histórico ainda.</div>';
+          <div class="folder-card">
+            <div class="folder-title">📁 Arquivo de conversas</div>
+            <div class="subfolder-title">Recentes</div>
+            ${recent.map(item => conversationItem(item)).join('') || '<div class="muted">Sem conversas antigas.</div>'}
+          </div>
+        ` : '<div class="muted">Sem conversas ainda.</div>';
       } catch (_) {}
+    }
+
+    function conversationItem(item) {
+      return `
+        <div class="history-item" onclick="loadHistory('${encodeURIComponent(item.input)}')">
+          💬 ${escapeHtml(item.input.slice(0, 42))}${item.input.length > 42 ? '...' : ''}
+        </div>
+      `;
     }
 
     function loadHistory(encoded) {
