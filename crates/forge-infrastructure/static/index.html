@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FORGE — Rust Prompt Engineer</title>
-  <link rel="icon" type="image/png" href="assets/forge-logo.png">
+  <link rel="icon" type="image/svg+xml" href="forge-favicon.svg">
+  <link rel="shortcut icon" href="forge-favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
@@ -58,14 +59,7 @@
     .hidden { display: none !important; }
     .mono { font-family: "JetBrains Mono", monospace; }
     .brand { color: var(--ember); font-family: "Space Grotesk", sans-serif; font-weight: 800; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 10px; }
-    .brand-logo {
-      width: 34px;
-      height: 34px;
-      object-fit: cover;
-      border-radius: 10px;
-      border: 1px solid rgba(255,69,0,0.35);
-      box-shadow: 0 0 20px rgba(255,69,0,0.22);
-    }
+    .brand-logo { width: 28px; height: 28px; }
 
     .setup {
       min-height: 100vh;
@@ -84,7 +78,8 @@
     }
 
     .modal-card {
-      width: min(1120px, 100%);
+      width: min(960px, 100%);
+      padding: 24px;
     }
 
     .setup-title {
@@ -96,13 +91,14 @@
 
     .muted { color: var(--dim); }
     .grid { display: grid; gap: 16px; }
-    .provider-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin: 24px 0; }
+    .provider-grid { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin: 16px 0; }
 
     .provider-card {
       background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 18px;
+      padding: 14px;
+      min-width: 0;
     }
 
     .provider-top {
@@ -116,7 +112,7 @@
     .provider-name {
       font-family: "Space Grotesk", sans-serif;
       font-weight: 700;
-      font-size: 18px;
+      font-size: 15px;
     }
 
     .badge {
@@ -162,8 +158,9 @@
       color: var(--text);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 11px 16px;
+      padding: 7px 10px;
       font-weight: 600;
+      font-size: 12.5px;
     }
 
     .btn:hover { border-color: var(--ember); color: var(--ember); }
@@ -204,15 +201,20 @@
 
     .layout {
       display: grid;
-      grid-template-columns: 260px 1fr;
+      grid-template-columns: 240px 1fr;
       min-height: calc(100vh - 64px);
     }
 
     aside {
+      width: 240px;
+      min-width: 240px;
+      height: calc(100vh - 64px);
       border-right: 1px solid var(--border);
-      background: color-mix(in srgb, var(--surface) 86%, transparent);
-      padding: 20px;
-      overflow-y: auto;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 0;
     }
 
     main {
@@ -223,10 +225,45 @@
     }
 
     .workbench {
-      display: grid;
-      grid-template-columns: minmax(360px, 0.86fr) minmax(420px, 1.14fr);
-      gap: 18px;
-      align-items: start;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      max-width: 920px;
+      height: calc(100vh - 220px);
+      min-height: 460px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      background: color-mix(in srgb, var(--surface) 88%, var(--bg));
+    }
+
+    .chat-panel {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    .composer-panel {
+      flex-shrink: 0;
+      border-top: 1px solid var(--border);
+      background: color-mix(in srgb, var(--surface2) 40%, var(--bg));
+      padding: 10px 12px 12px;
+    }
+
+    .continue-hint {
+      padding: 8px 12px 0;
+      color: var(--dim);
+      font-size: 12px;
+      text-align: center;
     }
 
     .workbench-column {
@@ -234,8 +271,32 @@
     }
 
     .response-column {
-      position: sticky;
+      position: static;
       top: 84px;
+    }
+
+    .sidebar-logo {
+      padding: 16px 16px 10px;
+      border-bottom: 1px solid var(--surface2);
+    }
+
+    .sidebar-level,
+    .sidebar-new {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--surface2);
+    }
+
+    .sidebar-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    .sidebar-files {
+      border-top: 1px solid var(--surface2);
+      padding: 8px 0;
+      max-height: 180px;
+      overflow: hidden;
     }
 
     .side-section { margin-bottom: 28px; }
@@ -263,26 +324,16 @@
       cursor: pointer;
     }
 
-    .sidebar-tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
-    .sidebar-tab.active,
     .settings-tab.active {
       border-color: var(--ember);
       color: var(--ember);
       background: rgba(255,69,0,0.08);
     }
 
-    .sidebar-panel,
     .settings-section {
       display: none;
     }
 
-    .sidebar-panel.active,
     .settings-section.active {
       display: block;
     }
@@ -338,12 +389,24 @@
       background: var(--surface2);
     }
 
+    .settings-choice.active {
+      border-color: var(--ember);
+      color: var(--ember);
+      background: rgba(255,69,0,0.08);
+    }
+
     .preview {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 16px;
       margin-bottom: 18px;
+    }
+
+    .preview.compact {
+      margin-top: 12px;
+      padding: 10px;
+      background: color-mix(in srgb, var(--surface2) 45%, var(--bg));
     }
 
     .preview-head {
@@ -359,43 +422,47 @@
       background: color-mix(in srgb, var(--bg) 88%, black);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 16px;
+      padding: 12px;
       white-space: pre-wrap;
       overflow: auto;
-      max-height: 260px;
+      max-height: 220px;
       color: #ddd;
-      font: 13px/1.6 "JetBrains Mono", monospace;
+      font: 12px/1.55 "JetBrains Mono", monospace;
     }
 
     .response-box {
-      min-height: 520px;
-      max-height: calc(100vh - 250px);
+      min-height: 120px;
+      max-height: none;
+      overflow: visible;
+      border: 0;
+      background: transparent;
+      padding: 0;
     }
 
     .composer {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 18px;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      padding: 0;
+      margin: 0;
     }
 
     textarea {
-      min-height: 150px;
+      min-height: 88px;
       resize: vertical;
       border: 0;
       background: transparent;
-      padding: 8px;
-      font-size: 18px;
+      padding: 6px;
+      font-size: 16px;
     }
 
     .composer-actions {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 8px;
       border-top: 1px solid var(--border);
-      padding-top: 12px;
+      padding-top: 10px;
     }
 
     .attachment-note {
@@ -423,13 +490,102 @@
     .response-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 12px;
+      gap: 6px;
+      margin-top: 8px;
     }
 
     .working-state {
       display: grid;
       gap: 12px;
+    }
+
+    .chat-thread {
+      display: grid;
+      gap: 8px;
+    }
+
+    .chat-message {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      background: color-mix(in srgb, var(--surface2) 48%, var(--bg));
+    }
+
+    .chat-message.user {
+      border-color: rgba(255,69,0,0.28);
+      background: rgba(255,69,0,0.06);
+    }
+
+    .chat-role {
+      font: 800 11px "JetBrains Mono", monospace;
+      color: var(--ember);
+      margin-bottom: 6px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .chat-text {
+      white-space: pre-wrap;
+      color: #ddd;
+      font: 12.5px/1.5 "JetBrains Mono", monospace;
+    }
+
+    .artifact-card {
+      border: 1px solid rgba(255,69,0,0.25);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(255,69,0,0.06);
+      display: grid;
+      gap: 8px;
+    }
+
+    .artifact-head {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .artifact-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,69,0,0.16);
+      font-size: 16px;
+    }
+
+    .artifact-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .prompt-offer {
+      display: grid;
+      gap: 9px;
+      font-size: 13px;
+    }
+
+    .prompt-offer-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .prompt-offer-actions .btn {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    .prompt-offer-text {
+      max-height: 140px;
+      margin: 8px 0 0;
+      border-radius: 10px;
+    }
+
+    .chat-message.prompt-offer {
+      border-color: rgba(255,69,0,0.22);
     }
 
     .working-title {
@@ -727,6 +883,7 @@
       gap: 10px;
       align-items: flex-start;
       justify-content: space-between;
+      flex-wrap: wrap;
     }
 
     .status-callout strong { color: var(--text); }
@@ -804,24 +961,520 @@
 
     @media (max-width: 860px) {
       .layout { grid-template-columns: 1fr; }
-      .workbench { grid-template-columns: 1fr; }
-      .settings-grid { grid-template-columns: 1fr; }
-      .response-column { position: static; }
-      .response-box { min-height: 260px; max-height: 420px; }
-      .guide-panel { grid-template-columns: 1fr; }
-      aside { border-right: 0; border-bottom: 1px solid var(--border); }
-      nav { padding: 0 14px; }
-      .nav-actions { gap: 6px; }
-      .nav-actions .btn { padding: 9px 10px; font-size: 13px; }
-      main { padding: 18px; }
-      .key-row { flex-direction: column; }
+      #sidebar { width: 100%; min-width: 0; height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
+      #conv-list { max-height: 160px; }
+      #header { padding: 0 10px; }
+      .header-actions { gap: 4px; }
     }
+
+    /* ── LAYOUT COMPACTO CHAT ── */
+    html, body { height: 100%; overflow: hidden; }
+    body { min-height: 100%; background: var(--bg); }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    #header {
+      height: 48px;
+      min-height: 48px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: 0.1em;
+      color: var(--ember);
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 6px; }
+
+    .header-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 5px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--dim);
+      cursor: pointer;
+    }
+    .header-btn:hover { color: var(--text); border-color: var(--dim); }
+
+    #body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    #sidebar {
+      width: 220px;
+      min-width: 220px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      height: auto;
+      padding: 0;
+    }
+
+    .sidebar-section {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    #conv-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+
+    .conv-group-label {
+      padding: 8px 12px 3px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .conv-item, .history-item {
+      padding: 6px 12px 6px 20px;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #777;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border-left: 2px solid transparent;
+    }
+    .conv-item:hover, .history-item:hover {
+      background: var(--surface2);
+      color: var(--text);
+      border-left-color: var(--ember);
+    }
+    .conv-item.active {
+      background: rgba(255,69,0,0.06);
+      color: var(--text);
+      border-left-color: var(--ember);
+    }
+
+    #files-section { border-top: 1px solid var(--border); max-height: 130px; overflow-y: auto; }
+
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+      padding: 0;
+      max-width: none;
+    }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 0;
+    }
+
+    #empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--muted);
+      text-align: center;
+      padding: 20px;
+    }
+    #empty-state h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      color: var(--text);
+    }
+    #empty-state p { font-size: 13px; color: var(--dim); max-width: 380px; line-height: 1.5; }
+
+    .quick-suggestions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 6px; }
+    .suggestion-chip {
+      padding: 6px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 11px;
+      color: var(--dim);
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .suggestion-chip:hover { border-color: var(--ember); color: var(--text); }
+
+    .msg-user {
+      align-self: flex-end;
+      max-width: 72%;
+      background: rgba(255,69,0,0.12);
+      border: 1px solid rgba(255,69,0,0.25);
+      border-radius: 12px 12px 2px 12px;
+      padding: 9px 12px;
+      font-size: 13px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
+    .msg-ai {
+      align-self: flex-start;
+      max-width: 88%;
+      display: flex;
+      gap: 8px;
+    }
+
+    .msg-ai-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--ember);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .msg-ai-body { min-width: 0; flex: 1; }
+
+    .msg-ai-content {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 2px 12px 12px 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .msg-ai-content .prompt-preview {
+      max-height: 120px;
+      margin-top: 8px;
+      font-size: 11px;
+    }
+
+    .prompt-offer-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .prompt-offer-actions .btn, .prompt-offer-actions .header-btn { padding: 5px 10px; font-size: 11px; }
+
+    .artifact-card {
+      margin-top: 12px;
+      border: 1px solid rgba(255,69,0,0.28);
+      border-radius: 14px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,69,0,0.08) 0%, rgba(20,20,20,0.95) 100%);
+      max-width: 420px;
+    }
+    .artifact-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px 10px;
+    }
+    .artifact-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,69,0,0.18);
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .artifact-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+    .artifact-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--dim);
+      letter-spacing: 0.04em;
+    }
+    .artifact-preview {
+      border-top: 1px solid var(--border);
+      background: #0A0A0A;
+      min-height: 180px;
+      max-height: 260px;
+      overflow: hidden;
+    }
+    .artifact-preview iframe {
+      width: 100%;
+      height: 240px;
+      border: 0;
+      background: #FFF;
+      pointer-events: none;
+      transform: scale(0.92);
+      transform-origin: top center;
+    }
+    .artifact-preview img {
+      width: 100%;
+      display: block;
+      max-height: 240px;
+      object-fit: cover;
+    }
+    .artifact-actions {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px 14px;
+      flex-wrap: wrap;
+    }
+    .artifact-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid var(--border);
+      color: var(--text);
+      background: var(--surface2);
+    }
+    .artifact-btn.primary {
+      background: var(--ember);
+      border-color: var(--ember);
+      color: #FFF;
+      font-weight: 700;
+    }
+    .artifact-btn:hover { filter: brightness(1.08); }
+    .delivery-note {
+      margin-top: 10px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--dim);
+    }
+
+    .detection-badges, .badges { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+    .badge-intent { background: rgba(255,69,0,0.12); color: #FF6B35; border: 1px solid rgba(255,69,0,0.2);
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 2px 8px; border-radius: 10px; }
+    .badge-domain { background: rgba(99,179,237,0.1); color: #63B3ED; border: 1px solid rgba(99,179,237,0.2);
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 2px 8px; border-radius: 10px; }
+    .badge-level { background: rgba(154,205,50,0.1); color: #9ACD32; border: 1px solid rgba(154,205,50,0.2);
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 2px 8px; border-radius: 10px; }
+
+    .msg-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .action-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      padding: 4px 10px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .action-btn:hover { color: var(--text); border-color: var(--dim); }
+    .action-btn.positive { color: #4EC94E; border-color: rgba(78,201,78,0.3); }
+
+    .lang-btn {
+      font-size: 11px;
+      padding: 5px 10px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .lang-btn.active { color: var(--ember); border-color: var(--ember); background: rgba(255,69,0,0.08); }
+
+    .working-state { padding: 8px 0; }
+    .working-title { font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center; }
+    .thinking-line { font-size: 12px; color: var(--dim); }
+
+    .typing-indicator { display: flex; gap: 4px; padding: 4px 0; }
+    .typing-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--ember);
+      animation: typing-bounce 1.2s infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing-bounce {
+      0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+
+    #input-area {
+      flex-shrink: 0;
+      padding: 10px 16px 14px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    #input-wrapper {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px 8px 12px;
+    }
+    #input-wrapper:focus-within { border-color: rgba(255,69,0,0.4); }
+
+    #user-input, #mainInput {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      resize: none;
+      min-height: 22px;
+      max-height: 120px;
+      padding: 0;
+    }
+
+    #send-btn, #sendBtn {
+      padding: 7px 14px;
+      background: var(--ember);
+      color: white;
+      border: none;
+      border-radius: 7px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    #send-btn:hover, #sendBtn:hover { filter: brightness(1.08); }
+
+    #stop-btn, #stopBtn {
+      padding: 7px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    #file-btn, #attachBtn {
+      width: 32px; height: 32px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    #input-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    #detection-preview, #badges { display: flex; gap: 5px; flex-wrap: wrap; }
+
+    .response-actions { padding: 0 16px 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .response-actions .btn { padding: 4px 10px; font-size: 11px; }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open, .modal:not(.hidden) { display: flex; }
+
+    .modal-box {
+      background: #141414;
+      border: 1px solid #2A2A2A;
+      border-radius: 12px;
+      width: min(620px, 94vw);
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .file-item {
+      padding: 5px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #new-conv-btn {
+      width: 100%;
+      padding: 7px;
+      background: rgba(255,69,0,0.08);
+      border: 1px solid rgba(255,69,0,0.25);
+      color: var(--ember);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    #savings-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--green);
+      padding: 4px 10px;
+      background: rgba(78,201,78,0.08);
+      border: 1px solid rgba(78,201,78,0.2);
+      border-radius: 10px;
+    }
+
+    .app.hidden, .setup.hidden { display: none !important; }
+    #app:not(.hidden) { display: flex; }
   </style>
 </head>
 <body data-theme="dark">
   <section id="setup" class="setup hidden">
     <div class="setup-card">
-      <div class="brand"><img class="brand-logo" src="assets/forge-logo.png" alt="">FORGE</div>
+      <div class="brand"><img class="brand-logo" src="forge-favicon.svg" alt="Forge">FORGE</div>
       <h1 class="setup-title">Configuração inicial</h1>
       <p class="muted">Detectamos o seguinte na sua máquina. Configure ao menos um provider para começar.</p>
       <div id="setupProviders" class="grid provider-grid"></div>
@@ -832,96 +1485,83 @@
   </section>
 
   <section id="app" class="app hidden">
-    <nav>
-      <div class="brand"><img class="brand-logo" src="assets/forge-logo.png" alt="">FORGE</div>
-      <div class="nav-actions">
-        <button id="themeBtn" class="btn">☀ Claro</button>
-        <button id="settingsBtn" class="btn">⚙ Configurações</button>
-        <button id="statsBtn" class="btn">📊 Stats</button>
-        <button id="helpBtn" class="btn">📚 Guia</button>
+    <header id="header">
+      <div class="header-logo">
+        <img src="forge-favicon.svg" width="22" height="22" alt="">
+        FORGE
       </div>
-    </nav>
+      <div class="header-actions">
+        <span id="savings-badge">R$ 0,00 economizado</span>
+        <button id="statsBtn" class="header-btn" type="button">📊 Stats</button>
+        <button id="settingsBtn" class="header-btn" type="button">⚙ Config</button>
+        <button id="helpBtn" class="header-btn" type="button">📚 Guia</button>
+        <button id="themeBtn" class="header-btn" type="button">☀ Claro</button>
+        <button class="lang-btn active" data-lang="pt" type="button" onclick="setLang('pt')">PT</button>
+        <button class="lang-btn" data-lang="en" type="button" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" data-lang="es" type="button" onclick="setLang('es')">ES</button>
+        <button class="lang-btn" data-lang="he" type="button" onclick="setLang('he')">HE</button>
+      </div>
+    </header>
 
-    <div class="layout">
-      <aside>
-        <div class="side-section">
-          <div class="side-title">Nível de conhecimento</div>
-          <select id="expertiseSelect"></select>
+    <div id="body">
+      <aside id="sidebar">
+        <div class="sidebar-section">
+          <span class="sidebar-label">Nível</span>
+          <select id="expertise-select"></select>
         </div>
-        <div class="sidebar-tabs">
-          <button class="btn sidebar-tab active" data-sidebar="conversations">Conversas</button>
-          <button class="btn sidebar-tab" data-sidebar="files">Arquivos</button>
+        <div class="sidebar-section">
+          <button id="new-conv-btn" type="button" onclick="newConversation()">+ Nova conversa</button>
         </div>
-        <div id="sidebar-conversations" class="sidebar-panel active">
-          <div class="side-title">Pastas</div>
-          <div id="historyList" class="history-list"></div>
-        </div>
-        <div id="sidebar-files" class="sidebar-panel">
-          <div class="side-title">Arquivos e mídias</div>
-          <div id="fileLibrary" class="file-list"></div>
+        <div id="conv-list"></div>
+        <div id="files-section" class="sidebar-section">
+          <span class="sidebar-label">Arquivos</span>
+          <div id="files-list"></div>
         </div>
       </aside>
 
-      <main>
-        <section class="welcome-hero">
-          <h1>O que você quer fazer?</h1>
-          <p>Digite como se estivesse falando com uma pessoa. O Forge melhora o pedido, escolhe o contexto certo e envia para a IA configurada.</p>
-        </section>
-
-        <section id="providerStatus" class="status-callout">
-          <div>
-            <strong>Verificando providers...</strong>
-            <div class="muted">Se o Ollama não estiver rodando, vamos orientar como iniciar ou escolher outra IA.</div>
-          </div>
-          <button class="btn" onclick="openGuide('providers')">Ver instruções</button>
-        </section>
-
-        <div class="workbench">
-          <div class="workbench-column">
-            <section class="preview">
-              <div class="preview-head">
-                <strong><span class="section-label"><span>1</span>Detecção do Forge</span></strong>
-                <div>
-                  <button id="copyPromptBtn" class="btn">Copiar prompt</button>
-                  <button id="togglePreviewBtn" class="btn">expandir ▼</button>
-                </div>
-              </div>
-              <div id="badges" class="badges"></div>
-              <pre id="promptPreview" class="prompt-preview hidden"></pre>
-              <pre id="jsonPreview" class="json-preview hidden"></pre>
-            </section>
-
-            <div class="section-label"><span>2</span>Seu pedido</div>
-            <section class="composer">
-              <textarea id="mainInput" placeholder="O que você quer fazer?"></textarea>
-              <div id="attachmentList" class="attachment-list"></div>
-              <div class="composer-actions">
-                <div>
-                  <input id="fileInput" class="hidden" type="file" multiple accept=".txt,.md,.json,.csv,.html,.css,.js,.ts,.tsx,.rs,.php,.py,.sql,text/*">
-                  <button id="attachBtn" class="btn" type="button">📎 Arquivo</button>
-                  <div class="attachment-note">Anexe textos, código ou documentos simples. Imagens ainda entram como referência visual manual.</div>
-                </div>
-                <button id="sendBtn" class="btn primary">▶ Enviar</button>
-              </div>
-            </section>
-          </div>
-
-          <div class="workbench-column response-column">
-            <div class="section-label"><span>3</span>Resposta da IA</div>
-            <div id="responseBox" class="response-box">A resposta da IA aparecerá aqui.</div>
-            <div class="response-actions">
-              <button id="likeBtn" class="btn">👍</button>
-              <button id="dislikeBtn" class="btn">👎</button>
-              <button id="copyResponseBtn" class="btn">📋 Copiar</button>
-              <button id="regenBtn" class="btn">🔄 Regenerar</button>
-            </div>
+      <main id="main">
+        <div id="messages">
+          <div id="empty-state">
+            <img src="forge-favicon.svg" width="48" height="48" alt="" style="opacity:0.4">
+            <h2>O que você quer fazer?</h2>
+            <p>Digite como se estivesse falando com uma pessoa. O Forge entende a intenção e prepara o prompt certo para a IA.</p>
+            <div class="quick-suggestions" id="exampleButtons"></div>
           </div>
         </div>
-        <footer class="app-footer">
-          <span>FORGE criado por <strong>Rafael Ferreira</strong> · <a href="https://wa.me/5521971604248" target="_blank" rel="noreferrer">WhatsApp</a> · <a href="mailto:rafaelferreira2312@gmail.com">Email</a> · <a href="https://www.linkedin.com/in/rafael-ferreira-dev/" target="_blank" rel="noreferrer">LinkedIn</a></span>
-          <span class="faith">DEUS É FIÉL</span>
-        </footer>
+
+        <div id="input-area">
+          <div id="attachmentList" class="attachment-list" style="margin-bottom:6px"></div>
+          <div id="continueHint" class="continue-hint hidden" style="margin-bottom:6px;font-size:11px;color:var(--dim)">Continue a conversa escrevendo abaixo ↓</div>
+          <div id="input-wrapper">
+            <textarea id="user-input" placeholder="O que você quer fazer?" rows="1"></textarea>
+            <div class="input-actions">
+              <button id="file-btn" type="button" title="Anexar arquivo">📎</button>
+              <input type="file" id="file-input" class="hidden" multiple>
+              <button id="send-btn" type="button">▶ Enviar</button>
+              <button id="stop-btn" class="hidden" type="button">⏹ Stop</button>
+            </div>
+          </div>
+          <div id="input-meta">
+            <div id="detection-preview"></div>
+            <span id="input-hint">Enter para enviar · Shift+Enter nova linha</span>
+          </div>
+        </div>
       </main>
+    </div>
+
+    <div id="providerStatus" class="hidden" aria-hidden="true"></div>
+    <div id="detectionStatus" class="hidden" aria-hidden="true">
+      <button id="copyPromptBtn" type="button" class="hidden"></button>
+      <button id="togglePreviewBtn" type="button" class="hidden"></button>
+      <div id="badges"></div>
+      <pre id="promptPreview" class="hidden"></pre>
+      <pre id="jsonPreview" class="hidden"></pre>
+    </div>
+    <div class="hidden" aria-hidden="true">
+      <button id="likeBtn" type="button"></button>
+      <button id="dislikeBtn" type="button"></button>
+      <button id="copyResponseBtn" type="button"></button>
+      <button id="regenBtn" type="button"></button>
     </div>
   </section>
 
@@ -932,13 +1572,18 @@
         <button class="btn" data-close="settingsModal">Fechar</button>
       </div>
       <div class="guide-tabs">
-        <button class="btn settings-tab active" data-settings="ai">IA e modelos</button>
-        <button class="btn settings-tab" data-settings="providers">Chaves</button>
-        <button class="btn settings-tab" data-settings="knowledge">Conhecimento</button>
-        <button class="btn settings-tab" data-settings="files">Arquivos</button>
-        <button class="btn settings-tab" data-settings="about">Sistema</button>
+        <button class="btn settings-tab active" data-settings="providers">Providers</button>
+        <button class="btn settings-tab" data-settings="models">Modelos</button>
+        <button class="btn settings-tab" data-settings="profile">Perfil</button>
+        <button class="btn settings-tab" data-settings="language">Idioma & Moeda</button>
+        <button class="btn settings-tab" data-settings="about">Sobre</button>
       </div>
-      <section id="settings-ai" class="settings-section active">
+      <section id="settings-providers" class="settings-section active">
+        <div class="side-title">Providers</div>
+        <div id="settingsProviders" class="grid provider-grid"></div>
+        <div class="run-hint">Ollama e Groq são boas opções gratuitas. Configure ao menos um provider para começar.</div>
+      </section>
+      <section id="settings-models" class="settings-section">
         <div class="settings-grid">
           <div class="settings-card">
             <div class="side-title">Provider ativo</div>
@@ -948,28 +1593,57 @@
             <div id="providerList" class="provider-list" style="margin-top:16px"></div>
           </div>
           <div class="settings-card">
-            <p class="guide-title">Escolha quem responde</p>
-            <p class="muted">O Forge monta o prompt. A IA escolhida aqui gera a resposta. Se uma falhar, troque provider/modelo e envie novamente.</p>
+            <p class="guide-title">Instalar modelos Ollama</p>
+            <p class="muted">Baixe modelos locais conforme a RAM da máquina.</p>
+            <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+              <button class="btn" onclick="installModel('phi3:mini')">phi3:mini<br><span class="muted mono">~2GB RAM</span></button>
+              <button class="btn" onclick="installModel('llama3.2:3b')">llama3.2:3b<br><span class="muted mono">~4GB RAM</span></button>
+              <button class="btn" onclick="installModel('llama3.1:8b')">llama3.1:8b<br><span class="muted mono">~8GB RAM</span></button>
+              <button class="btn" onclick="installModel('deepseek-r1:7b')">deepseek-r1:7b<br><span class="muted mono">raciocínio</span></button>
+            </div>
             <div id="activeProviderHelp" class="run-hint">Carregando provider...</div>
           </div>
         </div>
       </section>
-      <section id="settings-providers" class="settings-section">
-        <div class="side-title">Chaves e providers</div>
-        <div id="settingsProviders" class="grid provider-grid"></div>
-      </section>
-      <section id="settings-knowledge" class="settings-section">
+      <section id="settings-profile" class="settings-section">
         <div class="side-title">Nível de conhecimento</div>
         <div id="settingsExpertise" class="expertise-buttons"></div>
+        <div class="side-title">Área de atuação</div>
+        <select id="areaSelect">
+          <option value="tecnologia">Tecnologia</option>
+          <option value="saude">Saúde</option>
+          <option value="juridico">Jurídico</option>
+          <option value="negocios">Negócios</option>
+          <option value="educacao">Educação</option>
+          <option value="criativo">Criativo / Design</option>
+          <option value="ciencias">Ciências</option>
+          <option value="outro">Outro</option>
+        </select>
       </section>
-      <section id="settings-files" class="settings-section">
-        <p class="guide-title">Arquivos e mídias</p>
-        <p class="muted">Arquivos anexados ficam visíveis na aba esquerda. Por enquanto, o Forge lê texto/código e usa no prompt; mídia gerada entrará aqui quando o endpoint de geração estiver pronto.</p>
-        <div id="settingsFileLibrary" class="file-list"></div>
+      <section id="settings-language" class="settings-section">
+        <div class="side-title">Idioma da interface</div>
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr));margin-bottom:20px">
+          <button class="btn settings-choice active" data-lang="pt" onclick="setLang('pt')">PT-BR</button>
+          <button class="btn settings-choice" data-lang="en" onclick="setLang('en')">EN</button>
+          <button class="btn settings-choice" data-lang="es" onclick="setLang('es')">ES</button>
+          <button class="btn settings-choice" data-lang="he" onclick="setLang('he')">HE</button>
+        </div>
+        <div class="side-title">Moeda para custos</div>
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr))">
+          <button class="btn settings-choice active" data-currency="BRL" onclick="setCurrency('BRL')">R$ BRL</button>
+          <button class="btn settings-choice" data-currency="USD" onclick="setCurrency('USD')">$ USD</button>
+          <button class="btn settings-choice" data-currency="EUR" onclick="setCurrency('EUR')">€ EUR</button>
+          <button class="btn settings-choice" data-currency="GBP" onclick="setCurrency('GBP')">£ GBP</button>
+          <button class="btn settings-choice" data-currency="ILS" onclick="setCurrency('ILS')">₪ ILS</button>
+        </div>
       </section>
       <section id="settings-about" class="settings-section">
-        <p class="guide-title">Sistema</p>
-        <p class="muted">FORGE roda localmente em Rust. API keys ficam no SQLite local do projeto. Suas informações de autor continuam apenas no rodapé da tela principal.</p>
+        <div style="text-align:center;padding:20px 0">
+          <img src="forge-logo.svg" width="80" height="80" alt="Forge">
+          <p class="guide-title">FORGE</p>
+          <p class="muted">Rust Prompt Engineer. Você pensa. Forge traduz. A IA constrói.</p>
+          <p class="muted mono">Criado por Rafael Ferreira · MIT License · github.com/rafaelferreira2312/forge</p>
+        </div>
       </section>
     </div>
   </div>
@@ -1031,7 +1705,7 @@
   <div id="statsModal" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">
-        <h2>Stats</h2>
+        <h2>Consumo</h2>
         <button class="btn" data-close="statsModal">Fechar</button>
       </div>
       <div id="statsContent"></div>
@@ -1136,12 +1810,20 @@
       activeModel: '',
       expertise: 'avancado',
       preview: null,
+      offerPrompt: '',
+      pendingTurn: null,
+      lastTurnInput: '',
+      isExecuting: false,
       debounce: null,
+      abortController: null,
       lastInput: '',
       lastResponse: '',
       theme: 'dark',
       tourIndex: 0,
       attachments: [],
+      generatedFiles: [],
+      awaitingExecution: false,
+      currentConversationId: '',
     };
 
     const guideExamples = [
@@ -1247,7 +1929,19 @@
       ['Envie e aprenda', 'Clique Enviar. Se der erro, o Forge deve explicar o motivo e sugerir o próximo caminho.'],
     ];
 
-    const $ = (id) => document.getElementById(id);
+    const ID_ALIASES = {
+      mainInput: 'user-input',
+      responseBox: 'messages',
+      sendBtn: 'send-btn',
+      stopBtn: 'stop-btn',
+      attachBtn: 'file-btn',
+      fileInput: 'file-input',
+      conversationList: 'conv-list',
+      filesList: 'files-list',
+      expertiseSelect: 'expertise-select',
+    };
+
+    const $ = (id) => document.getElementById(ID_ALIASES[id] || id);
 
     async function api(path, options = {}) {
       const response = await fetch(path, {
@@ -1260,6 +1954,7 @@
     }
 
     async function boot() {
+      initConversationState();
       renderExamples();
       renderExpertiseButtons('setupExpertise');
       renderExpertiseButtons('settingsExpertise');
@@ -1269,35 +1964,252 @@
       await refreshProviders();
       await refreshHistory();
       bindEvents();
+      try {
+        const usage = await api('/api/usage');
+        updateSavingsBadge(usage.estimated_cost_brl || 0);
+      } catch (_) {}
       if (state.providers.some(p => p.configured)) showApp();
       else showSetup();
       if (!localStorage.getItem('forgeTourDone')) startTour();
+    }
+
+    function initConversationState() {
+      const conversations = storedConversations();
+      state.currentConversationId = localStorage.getItem('forgeCurrentConversationId') || conversations[0]?.id || createConversation().id;
+      localStorage.setItem('forgeCurrentConversationId', state.currentConversationId);
+      renderConversationThread();
+    }
+
+    function storedConversations() {
+      try {
+        return JSON.parse(localStorage.getItem('forgeConversations') || '[]');
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function saveConversations(conversations) {
+      localStorage.setItem('forgeConversations', JSON.stringify(conversations.slice(0, 80)));
+    }
+
+    function createConversation(firstMessage = '') {
+      const conversation = {
+        id: `conv-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        first_message: firstMessage,
+        messages: [],
+      };
+      const conversations = [conversation, ...storedConversations()];
+      saveConversations(conversations);
+      return conversation;
+    }
+
+    function currentConversation() {
+      let conversations = storedConversations();
+      let conversation = conversations.find(item => item.id === state.currentConversationId);
+      if (!conversation) {
+        conversation = createConversation();
+        state.currentConversationId = conversation.id;
+        localStorage.setItem('forgeCurrentConversationId', conversation.id);
+      }
+      return conversation;
+    }
+
+    function updateCurrentConversation(updater) {
+      const conversations = storedConversations();
+      const index = conversations.findIndex(item => item.id === state.currentConversationId);
+      if (index < 0) return;
+      updater(conversations[index]);
+      conversations[index].updated_at = new Date().toISOString();
+      const [conversation] = conversations.splice(index, 1);
+      conversations.unshift(conversation);
+      saveConversations(conversations);
+      renderConversations(conversations);
     }
 
     function renderExamples() {
       const target = $('exampleButtons');
       if (!target) return;
       target.innerHTML = guideExamples.map(example =>
-        `<button class="btn example-btn" onclick="useExample('${encodeURIComponent(example)}')">${escapeHtml(example)}</button>`
+        `<div class="suggestion-chip" onclick="setInput('${encodeURIComponent(example)}')">${escapeHtml(example)}</div>`
       ).join('');
     }
 
+    function setInput(encoded) {
+      useExample(encoded);
+    }
+
     function useExample(encoded) {
-      $('mainInput').value = decodeURIComponent(encoded);
+      const input = $('mainInput');
+      input.value = decodeURIComponent(encoded);
+      autoResizeInput(input);
       schedulePreview();
-      $('mainInput').focus();
+      input.focus();
+    }
+
+    function autoResizeInput(el) {
+      if (!el) return;
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 120) + 'px';
     }
 
     function inputWithAttachments() {
       const input = $('mainInput').value.trim();
-      if (!state.attachments.length) return input;
+      const context = conversationContext();
+      const base = context ? `${context}\n\n--- NOVO PEDIDO DO USUÁRIO ---\n${input}` : input;
+      if (!state.attachments.length) return base;
       const attachmentsText = state.attachments.map(file => `
 
 ANEXO: ${file.name}
 TIPO: ${file.type || 'texto'}
+TAMANHO: ${file.size || 0} bytes
 CONTEÚDO:
-${file.content}`).join('\n');
-      return `${input}\n\n--- ANEXOS DO USUÁRIO ---${attachmentsText}`;
+${file.content || file.description || 'Arquivo binario anexado como referencia. Se precisar analisar o conteudo visual/binario, use uma IA multimodal configurada.'}`).join('\n');
+      return `${base}\n\n--- ANEXOS DO USUÁRIO ---${attachmentsText}`;
+    }
+
+    function conversationContext() {
+      const conversation = currentConversation();
+      const messages = (conversation.messages || []).slice(-8);
+      if (!messages.length) return '';
+      return `--- CONTEXTO DA CONVERSA ATUAL ---\n${messages.map(message => `${message.role === 'user' ? 'Usuário' : 'Forge'}: ${message.content}`).join('\n\n')}`;
+    }
+
+    function addConversationMessage(role, content, artifact = null) {
+      updateCurrentConversation(conversation => {
+        if (!conversation.first_message && role === 'user') {
+          conversation.first_message = content.slice(0, 120);
+        }
+        conversation.messages = conversation.messages || [];
+        conversation.messages.push({
+          role,
+          content,
+          artifact,
+          created_at: new Date().toISOString(),
+        });
+      });
+      renderConversationThread();
+      scrollChatToBottom();
+    }
+
+    function scrollChatToBottom() {
+      const box = $('responseBox');
+      if (!box) return;
+      requestAnimationFrame(() => {
+        box.scrollTop = box.scrollHeight;
+      });
+    }
+
+    function toggleEmptyState(show) {
+      const empty = document.getElementById('empty-state');
+      if (empty) empty.style.display = show ? 'flex' : 'none';
+    }
+
+    function formatMessageHtml(text) {
+      if (!text) return '';
+      return escapeHtml(text)
+        .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+    }
+
+    function renderUserBubble(content) {
+      return `<div class="msg-user">${escapeHtml(content)}</div>`;
+    }
+
+    function renderAssistantBubble(content, extraHtml = '') {
+      return `
+        <div class="msg-ai">
+          <div class="msg-ai-avatar">🔥</div>
+          <div>
+            <div class="msg-ai-content">${formatMessageHtml(content)}${extraHtml}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function showContinueHint() {
+      const hint = $('continueHint');
+      if (hint) hint.classList.remove('hidden');
+    }
+
+    function renderArtifactCard(artifact) {
+      if (!artifact) return '';
+      const icon = artifact.icon || artifactIcon(artifact.label || artifact.filename || '');
+      const title = artifact.displayTitle || artifact.label || 'Entrega Forge';
+      const subtitle = artifact.displaySubtitle || 'Pronto para abrir, compartilhar ou imprimir como PDF';
+      const mime = (artifact.mime_type || '').toLowerCase();
+      const url = escapeHtml(artifact.url);
+      const preview = mime.includes('html')
+        ? `<div class="artifact-preview"><iframe src="${url}" title="${escapeHtml(title)}" loading="lazy"></iframe></div>`
+        : mime.includes('svg') || mime.includes('image')
+          ? `<div class="artifact-preview"><img src="${url}" alt="${escapeHtml(title)}"></div>`
+          : '';
+      return `
+        <div class="artifact-card">
+          <div class="artifact-head">
+            <span class="artifact-icon">${escapeHtml(icon)}</span>
+            <div>
+              <div class="artifact-title">${escapeHtml(title)}</div>
+              <div class="artifact-subtitle">${escapeHtml(subtitle)}</div>
+            </div>
+          </div>
+          ${preview}
+          <div class="artifact-actions">
+            <a class="artifact-btn primary" href="${url}" target="_blank" rel="noreferrer">Abrir entrega</a>
+            <a class="artifact-btn" href="${url}" download>Baixar</a>
+            ${mime.includes('html') ? `<a class="artifact-btn" href="${url}" target="_blank" rel="noreferrer" onclick="setTimeout(()=>alert('No navegador: Ctrl+P → Salvar como PDF'),300);return true;">Imprimir PDF</a>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function friendlyArtifactTitle(input, label) {
+      const text = String(input || '').trim();
+      if (text.length > 8) return text.slice(0, 72);
+      return label || 'Entrega Forge';
+    }
+
+    function artifactIcon(label) {
+      const text = String(label).toLowerCase();
+      if (text.includes('pdf')) return '📄';
+      if (text.includes('word') || text.includes('doc')) return '📝';
+      if (text.includes('excel') || text.includes('planilha') || text.includes('csv')) return '📊';
+      if (text.includes('áudio') || text.includes('audio') || text.includes('voz')) return '🎧';
+      if (text.includes('vídeo') || text.includes('video')) return '🎬';
+      if (text.includes('svg') || text.includes('imagem')) return '🎨';
+      if (text.includes('html')) return '🌐';
+      return '📦';
+    }
+
+    function renderConversationThread(extraHtml = '') {
+      const target = $('responseBox');
+      if (!target) return;
+      const conversation = currentConversation();
+      const messages = conversation.messages || [];
+      toggleEmptyState(!messages.length && !extraHtml);
+
+      const empty = document.getElementById('empty-state');
+      const threadHtml = `
+        ${messages.map(message => message.role === 'user'
+          ? renderUserBubble(message.content)
+          : renderAssistantBubble(message.content, renderArtifactCard(message.artifact))
+        ).join('')}
+        ${extraHtml}
+      `;
+
+      if (empty) {
+        target.querySelectorAll(':scope > :not(#empty-state)').forEach(node => node.remove());
+        if (threadHtml.trim()) {
+          const wrap = document.createElement('div');
+          wrap.innerHTML = threadHtml;
+          while (wrap.firstChild) target.appendChild(wrap.firstChild);
+        }
+      } else {
+        target.innerHTML = threadHtml;
+      }
     }
 
     function renderAttachments() {
@@ -1305,7 +2217,7 @@ ${file.content}`).join('\n');
       if (!target) return;
       target.innerHTML = state.attachments.map((file, index) => `
         <span class="attachment-chip">
-          ${escapeHtml(file.name)} · ${Math.round(file.content.length / 1024) || 1}KB
+          ${escapeHtml(file.name)} · ${Math.round((file.size || file.content?.length || 0) / 1024) || 1}KB
           <button class="btn" style="padding:2px 7px;margin-left:6px" onclick="removeAttachment(${index})">x</button>
         </span>
       `).join('');
@@ -1316,10 +2228,17 @@ ${file.content}`).join('\n');
       const sent = state.attachments.length ? state.attachments.map((file, index) => `
           <div class="file-item">
             <strong>${escapeHtml(file.name)}</strong>
-            <div class="muted mono">${escapeHtml(file.type || 'texto')} · ${Math.round(file.content.length / 1024) || 1}KB</div>
+            <div class="muted mono">${escapeHtml(file.type || 'arquivo')} · ${Math.round((file.size || file.content?.length || 0) / 1024) || 1}KB</div>
             <button class="btn" style="margin-top:8px" onclick="removeAttachment(${index})">Remover</button>
           </div>
         `).join('') : '<div class="muted">Nenhum arquivo enviado ainda. Use o botão 📎 Arquivo no pedido.</div>';
+      const generated = state.generatedFiles.length ? state.generatedFiles.map(file => `
+          <div class="file-item">
+            <strong>${escapeHtml(file.filename)}</strong>
+            <div class="muted mono">${escapeHtml(file.mime_type || 'arquivo gerado')}</div>
+            <a class="btn" style="display:inline-flex;margin-top:8px;text-decoration:none" href="${file.url}" target="_blank" rel="noreferrer">Abrir / baixar</a>
+          </div>
+        `).join('') : '<div class="muted">Nenhum arquivo gerado ainda.</div>';
       const markup = `
         <div class="folder-card">
           <div class="folder-title">📁 Enviados pelo usuário</div>
@@ -1327,11 +2246,10 @@ ${file.content}`).join('\n');
         </div>
         <div class="folder-card">
           <div class="folder-title">📁 Mídias geradas pelo Forge</div>
-          <div class="muted">Quando o Forge gerar imagens, vídeos, áudios ou documentos, eles aparecerão aqui.</div>
+          ${generated}
         </div>
       `;
-      if ($('fileLibrary')) $('fileLibrary').innerHTML = markup;
-      if ($('settingsFileLibrary')) $('settingsFileLibrary').innerHTML = markup;
+      if ($('filesList')) $('filesList').innerHTML = markup;
     }
 
     function removeAttachment(index) {
@@ -1344,20 +2262,37 @@ ${file.content}`).join('\n');
       const maxChars = 12000;
       const accepted = [];
       for (const file of Array.from(files || [])) {
-        if (file.size > 1024 * 1024) {
-          alert(`${file.name} é grande demais. Use arquivos até 1MB por enquanto.`);
+        if (file.size > 5 * 1024 * 1024) {
+          alert(`${file.name} é grande demais. Use arquivos até 5MB por enquanto.`);
           continue;
         }
-        const content = await file.text();
-        accepted.push({
-          name: file.name,
-          type: file.type || 'text/plain',
-          content: content.slice(0, maxChars),
-        });
+        const textLike = isTextLikeFile(file);
+        if (textLike) {
+          const content = await file.text();
+          accepted.push({
+            name: file.name,
+            type: file.type || 'text/plain',
+            size: file.size,
+            content: content.slice(0, maxChars),
+          });
+        } else {
+          accepted.push({
+            name: file.name,
+            type: file.type || 'application/octet-stream',
+            size: file.size,
+            description: `Arquivo anexado: ${file.name}. Tipo: ${file.type || 'desconhecido'}. Tamanho: ${file.size} bytes.`,
+          });
+        }
       }
       state.attachments = [...state.attachments, ...accepted].slice(0, 6);
       renderAttachments();
       schedulePreview();
+    }
+
+    function isTextLikeFile(file) {
+      const name = file.name.toLowerCase();
+      return (file.type || '').startsWith('text/')
+        || /\.(txt|md|json|csv|html|css|js|ts|tsx|rs|php|py|sql|xml|yaml|yml|toml|log)$/i.test(name);
     }
 
     function showSetup() {
@@ -1373,14 +2308,26 @@ ${file.content}`).join('\n');
     async function refreshProviders() {
       const data = await api('/api/providers');
       state.providers = data.providers;
-      const firstConfigured = state.providers.find(p => p.configured);
-      state.activeProvider = state.activeProvider || (firstConfigured ? firstConfigured.id : 'ollama');
-      const active = state.providers.find(p => p.id === state.activeProvider) || firstConfigured;
+      const preferredConfigured = choosePreferredProvider(state.providers);
+      const current = state.providers.find(provider => provider.id === state.activeProvider);
+      if (!state.activeProvider || !current?.configured || (state.activeProvider === 'ollama' && preferredConfigured?.id === 'groq')) {
+        state.activeProvider = preferredConfigured ? preferredConfigured.id : 'ollama';
+      }
+      const active = state.providers.find(p => p.id === state.activeProvider) || preferredConfigured;
       if (!state.activeModel || !(active?.models || []).includes(state.activeModel)) {
         state.activeModel = choosePreferredModel(active?.models || []);
       }
       renderProviders();
       maybeShowInstallAiModal(data.first_run);
+    }
+
+    function choosePreferredProvider(providers) {
+      return providers.find(provider => provider.id === 'groq' && provider.configured)
+        || providers.find(provider => provider.id === 'openrouter' && provider.configured)
+        || providers.find(provider => provider.id === 'claude' && provider.configured)
+        || providers.find(provider => provider.id === 'openai' && provider.configured)
+        || providers.find(provider => provider.id === 'gemini' && provider.configured)
+        || providers.find(provider => provider.configured);
     }
 
     function maybeShowInstallAiModal(firstRun) {
@@ -1558,9 +2505,11 @@ ${file.content}`).join('\n');
     function renderProviderStatus() {
       const provider = state.providers.find(p => p.id === state.activeProvider);
       if (!provider) return;
+      const target = $('providerStatus');
+      if (!target) return;
       const configured = provider.configured;
       const ollamaDown = provider.id === 'ollama' && !configured;
-      $('providerStatus').innerHTML = `
+      target.innerHTML = `
         <div>
           <strong>${configured ? 'Provider pronto para responder' : 'Provider ainda não configurado'}</strong>
           <div class="muted">
@@ -1571,8 +2520,8 @@ ${file.content}`).join('\n');
                 : `${provider.name} precisa de API key antes de responder.`}
           </div>
         </div>
-        <button class="btn" onclick="openGuide('${ollamaDown ? 'ollama' : 'providers'}')">Ver instruções</button>
       `;
+      if (state.preview) renderPreview();
     }
 
     function renderExpertiseButtons(targetId) {
@@ -1649,20 +2598,24 @@ ${file.content}`).join('\n');
         renderProviderList();
       };
       $('expertiseSelect').onchange = (event) => setExpertise(event.target.value);
-      $('mainInput').addEventListener('input', schedulePreview);
-      $('mainInput').addEventListener('keydown', (event) => {
+      const inputEl = $('mainInput');
+      inputEl.addEventListener('input', () => {
+        autoResizeInput(inputEl);
+        schedulePreview();
+      });
+      inputEl.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
           event.preventDefault();
           send();
         }
       });
       $('sendBtn').onclick = send;
+      $('stopBtn').onclick = stopCurrentRequest;
       $('attachBtn').onclick = () => $('fileInput').click();
       $('fileInput').onchange = (event) => handleFiles(event.target.files);
       $('regenBtn').onclick = send;
-      $('copyPromptBtn').onclick = () => copyText(state.preview?.prompt || '');
       $('copyResponseBtn').onclick = () => copyText(state.lastResponse);
-      $('togglePreviewBtn').onclick = togglePreview;
+      bindPreviewControls();
       $('settingsBtn').onclick = () => $('settingsModal').classList.remove('hidden');
       $('statsBtn').onclick = showStats;
       $('helpBtn').onclick = () => openGuide('start');
@@ -1674,9 +2627,6 @@ ${file.content}`).join('\n');
       document.querySelectorAll('.guide-tab').forEach(btn => {
         btn.onclick = () => showGuideSection(btn.dataset.guide);
       });
-      document.querySelectorAll('.sidebar-tab').forEach(btn => {
-        btn.onclick = () => showSidebarPanel(btn.dataset.sidebar);
-      });
       document.querySelectorAll('.settings-tab').forEach(btn => {
         btn.onclick = () => showSettingsSection(btn.dataset.settings);
       });
@@ -1685,9 +2635,9 @@ ${file.content}`).join('\n');
       });
     }
 
-    function showSidebarPanel(section) {
-      document.querySelectorAll('.sidebar-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.sidebar === section));
-      document.querySelectorAll('.sidebar-panel').forEach(panel => panel.classList.toggle('active', panel.id === `sidebar-${section}`));
+    function bindPreviewControls() {
+      if ($('copyPromptBtn')) $('copyPromptBtn').onclick = () => copyText(state.preview?.prompt || '');
+      if ($('togglePreviewBtn')) $('togglePreviewBtn').onclick = togglePreview;
     }
 
     function showSettingsSection(section) {
@@ -1695,8 +2645,72 @@ ${file.content}`).join('\n');
       document.querySelectorAll('.settings-section').forEach(panel => panel.classList.toggle('active', panel.id === `settings-${section}`));
     }
 
+    async function installModel(model) {
+      try {
+        const result = await api('/api/install/ollama-model', {
+          method: 'POST',
+          body: JSON.stringify({ model }),
+        });
+        alert(result.message);
+        await refreshProviders();
+      } catch (error) {
+        alert(`Não foi possível instalar ${model}: ${error.message}`);
+      }
+    }
+
+    function setLang(lang) {
+      localStorage.setItem('forgeLang', lang);
+      document.documentElement.lang = lang === 'pt' ? 'pt-BR' : lang;
+      document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr';
+      document.querySelectorAll('[data-lang]').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
+    }
+
+    function setCurrency(currency) {
+      localStorage.setItem('forgeCurrency', currency);
+      document.querySelectorAll('[data-currency]').forEach(btn => btn.classList.toggle('active', btn.dataset.currency === currency));
+    }
+
+    function resetTurnState() {
+      state.awaitingExecution = false;
+      state.pendingTurn = null;
+      state.isExecuting = false;
+      if ($('sendBtn')) {
+        $('sendBtn').textContent = '▶ Enviar';
+        $('sendBtn').classList.remove('hidden');
+      }
+      if ($('stopBtn')) $('stopBtn').classList.add('hidden');
+    }
+
+    function newConversation() {
+      const conversation = createConversation();
+      state.currentConversationId = conversation.id;
+      localStorage.setItem('forgeCurrentConversationId', conversation.id);
+      $('mainInput').value = '';
+      autoResizeInput($('mainInput'));
+      const preview = document.getElementById('detection-preview');
+      if (preview) preview.innerHTML = '';
+      if ($('badges')) $('badges').innerHTML = '';
+      if ($('promptPreview')) $('promptPreview').textContent = '';
+      if ($('jsonPreview')) $('jsonPreview').textContent = '';
+      state.preview = null;
+      state.lastInput = '';
+      state.lastResponse = '';
+      state.lastTurnInput = '';
+      state.attachments = [];
+      resetTurnState();
+      if ($('continueHint')) $('continueHint').classList.add('hidden');
+      renderAttachments();
+      renderConversationThread();
+      renderConversations(storedConversations());
+      $('mainInput').focus();
+    }
+
     function schedulePreview() {
       clearTimeout(state.debounce);
+      const visibleInput = $('mainInput').value.trim();
+      if (state.awaitingExecution && state.pendingTurn && visibleInput !== state.pendingTurn.visibleInput) {
+        resetTurnState();
+      }
       state.debounce = setTimeout(preview, 400);
     }
 
@@ -1704,28 +2718,30 @@ ${file.content}`).join('\n');
       const input = inputWithAttachments();
       if (!input) return;
       state.lastInput = input;
-      state.preview = await api('/api/engineer', {
+      state.preview = await api('/api/engineer?record=false', {
         method: 'POST',
         body: JSON.stringify({ input, provider: state.activeProvider }),
       });
       renderPreview();
-      await refreshHistory();
     }
 
     function renderPreview() {
       const p = state.preview;
-      $('badges').innerHTML = [
-        badge(intentLabel(p.intent.primary)),
-        badge(domainLabel(p.domain.domain)),
-        badge(`📊 ${capitalize(p.complexity.level)}`),
-        badge(techniqueLabel(p.technique.technique)),
+      if (!p) return;
+      const badgeHtml = [
+        `<span class="badge badge-intent">${intentLabel(p.intent.primary)}</span>`,
+        `<span class="badge badge-domain">${domainLabel(p.domain.domain)}</span>`,
+        `<span class="badge badge-level">${capitalize(p.complexity.level)}</span>`,
       ].join('');
-      $('promptPreview').textContent = p.prompt;
-      $('jsonPreview').textContent = JSON.stringify(p, null, 2);
+      const inline = document.getElementById('detection-preview');
+      if (inline) inline.innerHTML = badgeHtml;
+      if ($('badges')) $('badges').innerHTML = badgeHtml;
+      if ($('promptPreview')) $('promptPreview').textContent = p.prompt;
+      if ($('jsonPreview')) $('jsonPreview').textContent = JSON.stringify(p, null, 2);
     }
 
     function badge(text) {
-      return `<button class="badge ember" onclick="togglePreview()">${text}</button>`;
+      return `<span class="badge badge-intent">${text}</span>`;
     }
 
     function intentLabel(intent) {
@@ -1764,66 +2780,347 @@ ${file.content}`).join('\n');
     }
 
     async function send() {
+      const visibleInput = $('mainInput').value.trim();
       const input = inputWithAttachments();
-      if (!input) return;
+      if (!input || state.isExecuting) return;
+
+      if (state.awaitingExecution && state.pendingTurn) {
+        await executeForgePrompt();
+        return;
+      }
+
+      addConversationMessage('user', visibleInput);
+      $('mainInput').value = '';
+      autoResizeInput($('mainInput'));
+      const previewEl = document.getElementById('detection-preview');
+      if (previewEl) previewEl.innerHTML = '';
       renderWorkingState('Preparando seu pedido', [
         'Lendo o que você escreveu...',
         'Montando o briefing com o nível de conhecimento escolhido...',
-        'Preparando o envio para a IA configurada...'
+        'Preparando o prompt para você decidir...'
       ]);
-      if (!state.preview || state.preview.input !== input) await preview();
-      const provider = state.activeProvider || $('providerSelect').value;
-      const model = state.activeModel || 'modelo padrão';
-      renderWorkingState('Estamos trabalhando nisso', [
-        `Chamando ${providerLabel(provider)} com ${model}...`,
-        'Aguardando a IA ler o prompt melhorado...',
-        'Processando a resposta para mostrar aqui...'
-      ]);
+
+      if (!state.preview || state.lastTurnInput !== input) {
+        await preview();
+      }
+
+      state.pendingTurn = { visibleInput, fullInput: input };
+      state.lastTurnInput = input;
+      renderForgePromptOffer();
+    }
+
+    function renderForgePromptOffer() {
+      const dna = savedForgeDna();
+      const turn = state.pendingTurn || { visibleInput: $('mainInput').value.trim(), fullInput: inputWithAttachments() };
+      const greeting = dna?.name
+        ? `${dna.name}, preparei o prompt. Você decide o próximo passo:`
+        : 'Preparei o prompt. Você decide o próximo passo:';
+      state.offerPrompt = buildOfferPrompt(turn.fullInput, turn.visibleInput, state.preview.prompt);
+      state.awaitingExecution = true;
+      const badges = state.preview ? `
+        <div class="detection-badges">
+          <span class="badge badge-intent">${intentLabel(state.preview.intent.primary)}</span>
+          <span class="badge badge-domain">${domainLabel(state.preview.domain.domain)}</span>
+        </div>` : '';
+      const offerHtml = `
+        <div class="msg-ai">
+          <div class="msg-ai-avatar">🔥</div>
+          <div>
+            ${badges}
+            <div class="msg-ai-content">
+              <p>${escapeHtml(greeting)} copie para outra IA ou deixe o Forge pedir e entregar aqui.</p>
+              <pre class="prompt-preview prompt-offer-text" style="margin-top:10px">${escapeHtml(state.offerPrompt)}</pre>
+            </div>
+            <div class="msg-actions">
+              <button class="action-btn positive" onclick="executeForgePrompt()">🔥 Forge pedir</button>
+              <button class="action-btn" onclick="copyText(state.offerPrompt || state.preview?.prompt || '')">📋 Copiar prompt</button>
+              <button class="action-btn" onclick="usePromptElsewhere()">↗️ Usar em outra IA</button>
+            </div>
+          </div>
+        </div>
+      `;
+      renderConversationThread(offerHtml);
+      $('sendBtn').textContent = '🔥 Forge pedir';
+      scrollChatToBottom();
+    }
+
+    function usePromptElsewhere() {
+      resetTurnState();
+      addConversationMessage('assistant', 'Perfeito. Copie o prompt acima e use onde quiser. Quando quiser continuar comigo, é só escrever o próximo pedido abaixo.');
+      showContinueHint();
+      $('mainInput').value = '';
+      $('mainInput').focus();
+    }
+
+    function savedForgeDna() {
       try {
+        return JSON.parse(localStorage.getItem('forgeLeadDna') || 'null');
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function setWorkingControls(isWorking) {
+      $('sendBtn').classList.toggle('hidden', isWorking);
+      $('stopBtn').classList.toggle('hidden', !isWorking);
+    }
+
+    function stopCurrentRequest() {
+      if (state.abortController) {
+        state.abortController.abort();
+      }
+      resetTurnState();
+      addConversationMessage('assistant', 'Parei o processamento. A conversa continua — ajuste o pedido e envie novamente quando quiser.');
+      showContinueHint();
+    }
+
+    async function executeForgePrompt() {
+      if (state.isExecuting) return;
+      const turn = state.pendingTurn;
+      if (!turn) return;
+
+      const { visibleInput, fullInput: input } = turn;
+      state.isExecuting = true;
+      state.abortController = new AbortController();
+      setWorkingControls(true);
+
+      try {
+        state.preview = await api('/api/engineer?record=true', {
+          method: 'POST',
+          signal: state.abortController.signal,
+          body: JSON.stringify({ input, provider: state.activeProvider }),
+        });
+        renderPreview();
+        const provider = state.activeProvider || $('providerSelect').value;
+        const model = state.activeModel || 'modelo padrão';
+        renderWorkingState('Forge pedindo para a IA', [
+          `Chamando ${providerLabel(provider)} com ${model}...`,
+          'Pedindo o conteúdo final com especialista da área...',
+          'Preparando a entrega dentro da conversa...'
+        ]);
+        const artifact = detectRequestedArtifact(visibleInput, conversationContext());
         const result = await api('/api/chat', {
           method: 'POST',
+          signal: state.abortController.signal,
           body: JSON.stringify({
-            prompt: state.preview.prompt,
+            prompt: buildExecutionPrompt(input, visibleInput, state.preview.prompt, artifact),
             provider,
             model: state.activeModel || null,
           }),
         });
         state.lastResponse = result.response;
-        await typeResponse(result.response || '(provider retornou resposta vazia)');
+        if (artifact) {
+          await handleAutomaticArtifact(visibleInput, result.response || '', artifact);
+        } else {
+          addConversationMessage('assistant', result.response || '(provider retornou resposta vazia)');
+        }
+        $('mainInput').value = '';
+        showContinueHint();
       } catch (error) {
-        renderChatError(error.message);
+        if (error.name === 'AbortError') {
+          renderConversationThread();
+        } else {
+          renderChatError(error.message);
+        }
+      } finally {
+        state.abortController = null;
+        state.preview = null;
+        state.lastTurnInput = '';
+        resetTurnState();
+        setWorkingControls(false);
+        $('mainInput').focus();
+        scrollChatToBottom();
       }
       await refreshHistory();
     }
 
+    function buildExecutionPrompt(inputWithContext, visibleInput, engineeredPrompt, artifactOverride = null) {
+      const artifact = artifactOverride || detectRequestedArtifact(visibleInput, conversationContext());
+      if (!artifact) return engineeredPrompt;
+      const specialist = detectSpecialistContext(visibleInput);
+      const quality = artifactQualityRules(artifact);
+
+      if (artifact.unsupported) {
+        return `FORGE está regendo a IA para entregar uma mídia ao usuário com o menor consumo possível.
+
+Tarefa: criar a melhor base final possível para ${artifact.label}. Esta instalação ainda não renderiza ${artifact.extension} real, então entregue o conteúdo de produção pronto para renderização posterior.
+
+ESPECIALISTA DA ÁREA:
+${specialist}
+
+REGRAS:
+- Não escreva prompt.
+- Não explique como usar outra IA.
+- Não escreva código, biblioteca, tutorial ou passo a passo técnico.
+- Entregue roteiro, narração, cenas, falas, trilha, marcações de tempo ou conteúdo final utilizável.
+- Seja completo, refinado, direto e pronto para produção.
+- Economize tokens: nada de prefácio, nada de conclusão vazia.
+${quality}
+
+PEDIDO DO USUÁRIO:
+${inputWithContext}`;
+      }
+
+      return `FORGE está regendo a IA como engenheiro de prompt sênior + diretor de entrega. O usuário já viu o prompt e escolheu que o Forge faça a entrega com impacto visual. Agora execute.
+
+Objetivo: gerar conteúdo final, magistral, bonito, completo e pronto para impressionar o cliente em um arquivo ${artifact.label}.
+
+ESPECIALISTA DA ÁREA:
+${specialist}
+
+REGRAS OBRIGATÓRIAS:
+- Entregue somente o conteúdo final que deve ir dentro do arquivo.
+- Priorize DESIGN, CLAREZA e IMPACTO — não entregue texto corrido sem estrutura.
+- Organize com títulos (##), listas (-), passos numerados (1.) e destaques (>).
+- Não diga "segue um prompt" nem explique o processo.
+- Não inclua código, biblioteca, tutorial ou instruções técnicas.
+- Não use blocos de código markdown.
+- Se for PDF/Word: documento premium com capa conceitual, seções, campos editáveis e acabamento profissional.
+- Se for receita/cardápio: nome, rendimento, tempo, ingredientes medidos, preparo numerado, dicas.
+- Se for planilha/Excel/CSV: tabela limpa com cabeçalhos e linhas úteis.
+- Se for HTML/SVG: conteúdo final válido, visualmente forte.
+- Se faltar dado, crie campos editáveis claros. Não peça esclarecimento.
+${quality}
+
+PEDIDO DO USUÁRIO:
+${inputWithContext}`;
+    }
+
+    function buildOfferPrompt(inputWithContext, visibleInput, engineeredPrompt) {
+      const artifact = detectRequestedArtifact(visibleInput, conversationContext());
+      if (!artifact) return engineeredPrompt;
+
+      const specialist = detectSpecialistContext(visibleInput);
+      const quality = artifactQualityRules(artifact);
+      const mediaNote = artifact.unsupported
+        ? `Crie a melhor base final para ${artifact.label}, pronta para renderização ${artifact.extension}.`
+        : `Crie o conteúdo final para um arquivo ${artifact.label}.`;
+
+      return `Você é um especialista de elite + diretor de entrega escolhido para transformar um pedido simples em uma peça final que impressiona o cliente.
+
+MISSÃO:
+${mediaNote}
+
+ESPECIALISTA DA ÁREA:
+${specialist}
+
+PADRÃO DE QUALIDADE:
+- Entregue conteúdo final com design mental claro: capa, seções, listas, passos, destaques.
+- Não entregue tutorial, código, bibliotecas ou explicações sobre como gerar.
+- Não diga que é um prompt.
+- Se faltarem dados, use campos editáveis claros.
+- Seja objetivo, elegante, visualmente organizado e profissional.
+${quality}
+
+PEDIDO ORIGINAL:
+${inputWithContext}`;
+    }
+
+    function detectSpecialistContext(input) {
+      const text = String(input || '').toLowerCase();
+      if (/(logo|marca|identidade|design|layout|banner|imagem|visual|landing page|site)/i.test(text)) {
+        return 'Atue como diretor criativo, designer sênior, UX writer e estrategista de marca. Cuide de hierarquia visual, clareza, estética, usabilidade, contraste, tom e acabamento profissional.';
+      }
+      if (/(contrato|jur[ií]dico|peti[cç][aã]o|cl[aá]usula|termo|lgpd|processo)/i.test(text)) {
+        return 'Atue como redator jurídico sênior. Use linguagem formal, estrutura clara, campos editáveis e ressalva prudente quando houver impacto legal.';
+      }
+      if (/(m[eé]dico|sa[uú]de|paciente|cl[ií]nica|diagn[oó]stico|receita|exame|hospital)/i.test(text)) {
+        return 'Atue como especialista em comunicação de saúde. Seja claro, responsável, educativo e inclua alerta para validação profissional quando necessário.';
+      }
+      if (/(obra|engenharia|constru[cç][aã]o|arquitetura|el[eé]trica|hidráulica|estrutura)/i.test(text)) {
+        return 'Atue como engenheiro/arquiteteto técnico. Organize requisitos, materiais, etapas, medidas, riscos, checklist e padrão executivo.';
+      }
+      if (/(financeiro|contas a pagar|contas a receber|fluxo de caixa|or[cç]amento|nota fiscal|custo|pre[cç]o)/i.test(text)) {
+        return 'Atue como controller financeiro e analista de operações. Priorize campos úteis, rastreabilidade, totais, vencimentos, status e leitura executiva.';
+      }
+      if (/(aula|curso|professor|did[aá]tico|explicando|ensino|estudo|php|javascript|python|programa[cç][aã]o)/i.test(text)) {
+        return 'Atue como professor especialista e redator técnico. Explique com precisão, exemplos úteis, progressão lógica, linguagem acessível e sem enrolação.';
+      }
+      if (/(card[aá]pio|receita|restaurante|cozinha|chef|alimento|gastronomia|sopa|sobremesa|bolo|massa)/i.test(text)) {
+        return 'Atue como chef consultor, editor gastronômico e diretor de arte editorial. Entregue receitas com layout premium: título forte, rendimento, tempo, ingredientes medidos, passo a passo numerado, dicas finais e apresentação que impressiona o cliente.';
+      }
+      if (/(governo|estado|pol[ií]tica|presidente|rei|ministro|of[ií]cio|memorando)/i.test(text)) {
+        return 'Atue como assessor executivo de alto nível. Use linguagem institucional, diplomática, objetiva, protocolar e estratégica.';
+      }
+      return 'Atue como especialista sênior do domínio do pedido. Identifique a área implicitamente, complete lacunas com bom senso, refine linguagem, estrutura e utilidade final.';
+    }
+
+    function designDeliveryRules(artifact) {
+      const label = String(artifact?.label || '').toLowerCase();
+      const base = `
+PADRÃO VISUAL DE IMPACTO (OBRIGATÓRIO):
+- Pense como diretor de arte + redator sênior: a entrega precisa impressionar o cliente final.
+- Hierarquia clara: capa/título forte, seções bem nomeadas, respiro visual, leitura escaneável.
+- Tom profissional, elegante e confiante. Nada genérico, nada "rascunho".
+- Use subtítulos explícitos com ## ou rótulos como "Ingredientes:", "Modo de preparo:", "Benefícios:".
+- Use listas com - para ingredientes, passos, itens, campos e destaques.
+- Quando couber, inclua bloco de destaque com > para dica, alerta ou resumo executivo.
+- Complete lacunas com bom senso e campos editáveis [entre colchetes] quando faltar dado.`;
+      if (label.includes('pdf') || label.includes('word')) {
+        return `${base}
+- Formato de documento premium: capa conceitual, introdução curta, corpo organizado, fechamento profissional.
+- Para receitas: nome da receita, rendimento, tempo, ingredientes medidos, passo a passo numerado, dicas finais.
+- Para relatórios/contratos: seções numeradas, linguagem formal, campos editáveis e clareza executiva.`;
+      }
+      if (label.includes('planilha') || label.includes('csv')) {
+        return `${base}
+- Cabeçalhos fortes, colunas úteis, linhas de exemplo realistas, totais/status quando fizer sentido.
+- Visual limpo de planilha executiva, pronta para operação.`;
+      }
+      if (label.includes('html')) {
+        return `${base}
+- Layout responsivo bonito, tipografia moderna, CTA claro, contraste e acabamento de landing page.`;
+      }
+      if (label.includes('svg') || label.includes('imagem')) {
+        return `${base}
+- Composição visual forte, paleta coerente, hierarquia, contraste e acabamento de peça profissional.`;
+      }
+      return base;
+    }
+
+    function artifactQualityRules(artifact) {
+      return designDeliveryRules(artifact);
+    }
+
     function renderWorkingState(title, lines) {
-      $('responseBox').innerHTML = `
-        <div class="working-state">
-          <div class="working-title"><span class="pulse-dot"></span>${escapeHtml(title)}</div>
-          <div class="progress-track"><span></span></div>
-          ${lines.map(line => `<div class="thinking-line">${escapeHtml(line)}</div>`).join('')}
+      renderConversationThread(`
+        <div class="msg-ai">
+          <div class="msg-ai-avatar">🔥</div>
+          <div class="msg-ai-content">
+            <div class="working-state">
+              <div class="working-title"><span class="pulse-dot"></span>${escapeHtml(title)}</div>
+              ${lines.map(line => `<div class="thinking-line">${escapeHtml(line)}</div>`).join('')}
+              <div class="typing-indicator" style="margin-top:8px">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+              </div>
+            </div>
+          </div>
         </div>
-      `;
+      `);
     }
 
     function renderChatError(message) {
       const isOllama = message.toLowerCase().includes('ollama') || message.includes('11434');
-      const provider = state.activeProvider || $('providerSelect').value || 'provider';
+      const provider = state.activeProvider || $('providerSelect')?.value || 'provider';
       const model = state.activeModel || 'modelo padrão';
-      $('responseBox').innerHTML = `
-        <div class="soft-warning">
-          <strong>${isOllama ? 'Ainda não consegui falar com o Ollama' : 'A IA ainda não respondeu'}</strong>
-          <div>${escapeHtml(message)}</div>
-          <div class="mono">Tentativa: provider=${escapeHtml(providerLabel(provider))} · modelo=${escapeHtml(model)}</div>
-          <div>${isOllama
-            ? 'Isso normalmente significa que o Ollama não está aberto, parou de responder, ou o modelo local está ocupado. Você pode iniciar o Ollama ou escolher outra IA para receber resposta agora.'
-            : 'Verifique se o provider está configurado. Se precisar de resposta imediata, escolha outro provider disponível.'}</div>
-          <div class="contact-row">
-            <button class="btn" onclick="openGuide('${isOllama ? 'ollama' : 'providers'}')">Ver como resolver</button>
-            <button class="btn" onclick="$('settingsModal').classList.remove('hidden')">Configurar outra IA</button>
+      renderConversationThread(`
+        <div class="msg-ai">
+          <div class="msg-ai-avatar">🔥</div>
+          <div>
+            <div class="msg-ai-content">
+              <strong>${isOllama ? 'Ainda não consegui falar com o Ollama' : 'A IA ainda não respondeu'}</strong>
+              <p style="margin-top:8px">${escapeHtml(message)}</p>
+              <p class="mono" style="font-size:11px;margin-top:6px">provider=${escapeHtml(providerLabel(provider))} · modelo=${escapeHtml(model)}</p>
+            </div>
+            <div class="msg-actions">
+              <button class="action-btn" onclick="openGuide('${isOllama ? 'ollama' : 'providers'}')">Ver como resolver</button>
+              <button class="action-btn" onclick="$('settingsModal').classList.remove('hidden')">Configurar outra IA</button>
+            </div>
           </div>
         </div>
-      `;
+      `);
     }
 
     async function typeResponse(text) {
@@ -1843,32 +3140,185 @@ ${file.content}`).join('\n');
       alert(rating > 0 ? 'Feedback positivo salvo.' : 'Feedback negativo salvo.');
     }
 
+    async function handleAutomaticArtifact(userInput, aiResponse, artifactOverride = null) {
+      const artifact = artifactOverride || detectRequestedArtifact(userInput, conversationContext());
+      if (!artifact) return;
+
+      if (artifact.unsupported) {
+        addConversationMessage('assistant', `Veja o que o Forge conseguiu trazer para você: ainda não existe um motor de ${artifact.label} configurado nesta instalação para renderizar ${artifact.extension} real, então trouxe a melhor base final possível para essa mídia.\n\n${aiResponse || 'A IA não retornou conteúdo utilizável para essa mídia.'}\n\nDiferença para pedir direto em outra IA: em outra IA você provavelmente receberia só uma explicação genérica. Aqui o Forge identificou que você queria uma mídia pronta e deixou claro o que falta para transformar em arquivo final.`);
+        return;
+      }
+
+      try {
+        const result = await api('/api/files/generate', {
+          method: 'POST',
+          signal: state.abortController?.signal,
+          body: JSON.stringify({
+            title: userInput.slice(0, 90) || artifact.label,
+            filename: userInput.slice(0, 60) || artifact.filename,
+            file_type: artifact.fileType,
+            content: aiResponse,
+          }),
+        });
+        state.generatedFiles.unshift(result);
+        renderFileLibrary();
+        addConversationMessage(
+          'assistant',
+          `Pronto — montei sua entrega com layout profissional para impressionar o cliente. Abra para ver o acabamento, baixe ou use Imprimir → Salvar como PDF.`,
+          {
+            label: artifact.label,
+            displayTitle: friendlyArtifactTitle(userInput, artifact.label),
+            displaySubtitle: 'Documento Forge · layout premium · pronto para apresentar',
+            filename: result.filename,
+            url: result.url,
+            mime_type: result.mime_type,
+            icon: artifactIcon(artifact.label),
+          }
+        );
+      } catch (error) {
+        addConversationMessage('assistant', `Eu entendi que você queria ${artifact.label}, mas não consegui gerar o arquivo agora.\nMotivo: ${error.message}\n\nA resposta da IA ficou disponível acima para você não perder o conteúdo.`);
+      }
+    }
+
+    function detectRequestedArtifact(input, contextText = '') {
+      const current = (input || '').toLowerCase();
+      const context = (contextText || '').toLowerCase();
+      const text = `${current} ${context}`.trim();
+
+      const wantsGeneration = /(ger(a|e|ar|ação)|cria|crie|monta|monte|faz|fazer|template|modelo|arquivo|documento|midia|mídia|entreg|export|baix|download|forge pedir|forge entrega|transforma|convert)/i.test(text);
+      const mentionsFormat = /\b(pdf|planilha|excel|xls|xlsx|csv|html|word|doc|docx|json|svg|txt|boleto|contrato|relat[oó]rio|proposta|or[cç]amento|recibo|imagem|foto|ilustra|logo|v[ií]deo|video|mp4|[aá]udio|audio|mp3|wav|voz)\b/i.test(text);
+      const followUpDelivery = /(isso|esse|essa|agora|depois|tamb[eé]m).*(pdf|planilha|excel|arquivo|documento|imagem|v[ií]deo|[aá]udio)/i.test(current);
+
+      if (!wantsGeneration && !mentionsFormat && !followUpDelivery) return null;
+
+      if (/\b(pdf|boleto|contrato|relat[oó]rio|proposta|or[cç]amento|recibo)\b/i.test(text) || /\bpdf\b/i.test(current) || followUpDelivery && /\bpdf\b/i.test(current)) {
+        return { fileType: 'pdf', label: 'PDF', filename: 'forge-documento.pdf', icon: '📄' };
+      }
+      if (/\b(planilha|excel|xls|xlsx|contas a pagar|financeiro)\b/i.test(text)) {
+        return { fileType: 'xls', label: 'planilha Excel', filename: 'forge-planilha.xls', icon: '📊' };
+      }
+      if (/\bcsv\b/i.test(text)) {
+        return { fileType: 'csv', label: 'CSV', filename: 'forge-dados.csv', icon: '📊' };
+      }
+      if (/\b(html|p[aá]gina html|landing page)\b/i.test(text)) {
+        return { fileType: 'html', label: 'HTML', filename: 'forge-pagina.html', icon: '🌐' };
+      }
+      if (/\b(word|doc|docx)\b/i.test(text)) {
+        return { fileType: 'doc', label: 'documento Word', filename: 'forge-documento.doc', icon: '📝' };
+      }
+      if (/\b(json)\b/i.test(text)) {
+        return { fileType: 'json', label: 'JSON', filename: 'forge-dados.json', icon: '🧩' };
+      }
+      if (/\b(svg|logo vetorial|imagem vetorial)\b/i.test(text)) {
+        return { fileType: 'svg', label: 'SVG', filename: 'forge-imagem.svg', icon: '🎨' };
+      }
+      if (/\b(imagem|foto|ilustra|desenho|figura|banner|logo)\b/i.test(text)) {
+        return { fileType: 'svg', label: 'imagem', filename: 'forge-imagem.svg', icon: '🖼️' };
+      }
+      if (/\b([aá]udio|audio|mp3|wav|narra[cç][aã]o|voz)\b/i.test(text)) {
+        return { unsupported: true, label: 'áudio', extension: 'MP3/WAV', icon: '🎧' };
+      }
+      if (/\b(v[ií]deo|video|mp4|reels|shorts|anima[cç][aã]o)\b/i.test(text)) {
+        return { unsupported: true, label: 'vídeo', extension: 'MP4', icon: '🎬' };
+      }
+      if (/\b(txt|texto)\b/i.test(text)) {
+        return { fileType: 'txt', label: 'arquivo TXT', filename: 'forge-texto.txt', icon: '📄' };
+      }
+      return null;
+    }
+
     async function refreshHistory() {
       try {
         const history = await api('/api/history?limit=20');
-        const today = history.slice(0, 8);
-        const recent = history.slice(8);
-        $('historyList').innerHTML = history.length ? `
-          <div class="folder-card">
-            <div class="folder-title">📁 Conversas do dia</div>
-            <div class="subfolder-title">Hoje</div>
-            ${today.map(item => conversationItem(item)).join('')}
-          </div>
-          <div class="folder-card">
-            <div class="folder-title">📁 Arquivo de conversas</div>
-            <div class="subfolder-title">Recentes</div>
-            ${recent.map(item => conversationItem(item)).join('') || '<div class="muted">Sem conversas antigas.</div>'}
-          </div>
-        ` : '<div class="muted">Sem conversas ainda.</div>';
+        const local = storedConversations();
+        renderConversations(local.length ? local : history);
       } catch (_) {}
     }
 
+    function renderConversations(conversations) {
+      const list = $('conversationList');
+      if (!list) return;
+      conversations = conversations.filter(conversation =>
+        (conversation.first_message && conversation.first_message.trim())
+        || (conversation.input && conversation.input.trim())
+        || (conversation.messages && conversation.messages.length)
+      );
+      if (!conversations.length) {
+        list.innerHTML = '<div style="padding:8px 12px;font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--muted)">Sem conversas ainda.</div>';
+        return;
+      }
+
+      const groups = {};
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const seen = new Set();
+
+      conversations.forEach((conversation, index) => {
+        const message = (conversation.first_message || conversation.input || 'Conversa').trim();
+        const key = message.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        const date = conversation.created_at
+          ? new Date(conversation.created_at)
+          : conversation.created_at_unix
+            ? new Date(conversation.created_at_unix * 1000)
+            : new Date();
+        let group = 'Esta semana';
+        if (isSameDay(date, today)) group = 'Hoje';
+        else if (isSameDay(date, yesterday)) group = 'Ontem';
+        else if (isThisWeek(date)) group = 'Esta semana';
+        else group = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        if (!groups[group]) groups[group] = [];
+        groups[group].push({ ...conversation, input: message, id: conversation.id || `local-${index}` });
+      });
+
+      list.innerHTML = Object.entries(groups).map(([groupName, items]) => `
+        <div class="conv-group-label">📁 ${escapeHtml(groupName)}</div>
+        ${items.map(conversationItem).join('')}
+      `).join('');
+    }
+
     function conversationItem(item) {
+      const message = item.first_message || item.input || 'Conversa';
+      const active = item.id === state.currentConversationId ? ' active' : '';
       return `
-        <div class="history-item" onclick="loadHistory('${encodeURIComponent(item.input)}')">
-          💬 ${escapeHtml(item.input.slice(0, 42))}${item.input.length > 42 ? '...' : ''}
+        <div class="conv-item${active}" onclick="loadConversation('${item.id}', '${encodeURIComponent(message)}')">
+          💬 ${escapeHtml(message.slice(0, 28))}${message.length > 28 ? '...' : ''}
         </div>
       `;
+    }
+
+    function loadConversation(id, encodedMessage) {
+      const local = storedConversations().find(conversation => conversation.id === id);
+      if (local) {
+        state.currentConversationId = local.id;
+        localStorage.setItem('forgeCurrentConversationId', local.id);
+        $('mainInput').value = '';
+        autoResizeInput($('mainInput'));
+        state.preview = null;
+        state.lastTurnInput = '';
+        resetTurnState();
+        if ($('continueHint')) {
+          $('continueHint').classList.toggle('hidden', !(local.messages && local.messages.length));
+        }
+        renderConversationThread();
+        renderConversations(storedConversations());
+        scrollChatToBottom();
+        return;
+      }
+      loadHistory(encodedMessage);
+    }
+
+    function isSameDay(first, second) {
+      return first.getDate() === second.getDate()
+        && first.getMonth() === second.getMonth()
+        && first.getFullYear() === second.getFullYear();
+    }
+
+    function isThisWeek(date) {
+      const diffDays = (new Date() - date) / (1000 * 60 * 60 * 24);
+      return diffDays <= 7;
     }
 
     function loadHistory(encoded) {
@@ -1876,16 +3326,29 @@ ${file.content}`).join('\n');
       schedulePreview();
     }
 
+    function updateSavingsBadge(amount) {
+      const el = document.getElementById('savings-badge');
+      if (el) el.textContent = `R$ ${Number(amount || 0).toFixed(2)} economizado`;
+    }
+
     async function showStats() {
-      const stats = await api('/api/stats');
+      const usage = await api('/api/usage');
       $('statsContent').innerHTML = `
         <div class="stats-grid">
-          <div class="stat-box"><div class="stat-num">${stats.total_requests}</div><div class="muted">requests</div></div>
-          <div class="stat-box"><div class="stat-num">${stats.history_size}</div><div class="muted">histórico</div></div>
-          <div class="stat-box"><div class="stat-num">${stats.average_complexity_score.toFixed(1)}</div><div class="muted">complexidade média</div></div>
+          <div class="stat-box"><div class="stat-num">${usage.total_requests}</div><div class="muted">chamadas de IA</div></div>
+          <div class="stat-box"><div class="stat-num">${usage.total_tokens}</div><div class="muted">tokens estimados</div></div>
+          <div class="stat-box"><div class="stat-num">$${usage.estimated_cost_usd.toFixed(4)}</div><div class="muted">custo USD estimado</div></div>
+          <div class="stat-box"><div class="stat-num">R$${usage.estimated_cost_brl.toFixed(2)}</div><div class="muted">custo BRL estimado</div></div>
         </div>
-        <h3>Domínios</h3>${bars(stats.by_domain)}
-        <h3>Intents</h3>${bars(stats.by_intent)}
+        <h3>Consumo por IA</h3>
+        ${usage.by_provider.length ? usage.by_provider.map(item => `
+          <div class="provider-line">
+            <strong>${providerLabel(item.provider)}</strong>
+            <div class="muted mono">${item.requests} chamadas · ${item.tokens} tokens · $${item.estimated_cost_usd.toFixed(4)}</div>
+            <div class="muted">${escapeHtml(item.note)}</div>
+          </div>
+        `).join('') : '<p class="muted">Sem consumo registrado ainda.</p>'}
+        <div class="run-hint">Valores são estimativas. Ollama local e free tiers podem aparecer como custo zero; confirme custos finais nos painéis oficiais das IAs.</div>
       `;
       $('statsModal').classList.remove('hidden');
     }

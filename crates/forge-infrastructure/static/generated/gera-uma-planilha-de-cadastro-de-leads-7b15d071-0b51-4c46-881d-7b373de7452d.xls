@@ -1,0 +1,33 @@
+<!doctype html><html><head><meta charset="utf-8"><title>gera uma planilha de cadastro de leads</title></head><body><table border="1"><tr><th>gera uma planilha de cadastro de leads</th></tr><tr><td>Cadastro de Leads</td></tr>
+<tr><td>Código</td><td>Nome</td><td>E-mail</td><td>Telefone</td><td>Endereço</td><td>Cidade</td><td>Estado</td><td>Data de Cadastro</td><td>Responsável</td><td>Observações</td></tr>
+<tr><td>Colunas de Status</td></tr>
+<tr><td>Status</td><td>Descrição</td></tr>
+<tr><td>Ativo</td><td>Lead ativo e pronto para contato</td></tr>
+<tr><td>Inativo</td><td>Lead inativo ou descartado</td></tr>
+<tr><td>Em Análise</td><td>Lead em análise ou em processo de qualificação</td></tr>
+<tr><td>Colunas de Valor</td></tr>
+<tr><td>Valor</td><td>Descrição</td></tr>
+<tr><td>Valor de Negócio</td><td>Valor potencial de negócio do lead</td></tr>
+<tr><td>Valor de Custo</td><td>Custo de obtenção do lead</td></tr>
+<tr><td>Estrutura da Tabela</td></tr>
+<tr><td>* Código: campo único para cada lead</td></tr>
+<tr><td>* Nome: nome do lead</td></tr>
+<tr><td>* E-mail: e-mail do lead</td></tr>
+<tr><td>* Telefone: telefone do lead</td></tr>
+<tr><td>* Endereço: endereço do lead</td></tr>
+<tr><td>* Cidade: cidade do lead</td></tr>
+<tr><td>* Estado: estado do lead</td></tr>
+<tr><td>* Data de Cadastro: data em que o lead foi cadastrado</td></tr>
+<tr><td>* Responsável: responsável pelo lead</td></tr>
+<tr><td>* Observações: observações adicionais sobre o lead</td></tr>
+<tr><td>Exemplo de Preenchimento</td></tr>
+<tr><td>Código</td><td>Nome</td><td>E-mail</td><td>Telefone</td><td>Endereço</td><td>Cidade</td><td>Estado</td><td>Data de Cadastro</td><td>Responsável</td><td>Observações</td></tr>
+<tr><td>001</td><td>João Silva</td><td>joao.silva@example.com</td><td>(11) 1234-5678</td><td>Rua ABC, 123</td><td>São Paulo</td><td>SP</td><td>15/06/2026</td><td>João Silva</td><td>Lead ativo e pronto para contato</td></tr>
+<tr><td>Colunas de Valor</td></tr>
+<tr><td>Valor</td><td>Descrição</td></tr>
+<tr><td>Valor de Negócio</td><td>R$ 100.000,00</td></tr>
+<tr><td>Valor de Custo</td><td>R$ 5.000,00</td></tr>
+<tr><td>Colunas de Status</td></tr>
+<tr><td>Status</td><td>Descrição</td></tr>
+<tr><td>Ativo</td><td>Lead ativo e pronto para contato</td></tr>
+<tr><td>Essa é a estrutura da planilha de cadastro de leads. Você pode preencher os dados conforme necessário e ajustar as colunas de valor e status para atender às suas necessidades específicas.</td></tr></table></body></html>

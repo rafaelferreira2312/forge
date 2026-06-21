@@ -80,6 +80,25 @@ Claude: Entrega o site completo na primeira resposta.
 
 ---
 
+## Repositório
+
+**GitHub:** [github.com/rafaelferreira2312/forge](https://github.com/rafaelferreira2312/forge)
+
+**Site / landing:** [rafaelferreira2312.github.io/forge](https://rafaelferreira2312.github.io/forge/)
+
+---
+
+## Como usar (passo a passo)
+
+1. **Gere seu DNA Forge** — na [landing](https://rafaelferreira2312.github.io/forge/#dna), preencha nome/empresa, email e WhatsApp. Você recebe um código `FORGE-DNA-...` salvo no navegador (e gravado no SQLite via `POST /api/leads/dna` quando o backend estiver rodando).
+2. **Instale o Forge** — clone o repositório ou use o script de instalação (ver abaixo).
+3. **Suba o servidor** — `cargo run -p forge-infrastructure` ou `./target/release/forge`.
+4. **Abra** [http://localhost:3000](http://localhost:3000) no mesmo navegador (opcional, mas recomendado para reconhecer o DNA).
+5. **Configure uma IA** — Groq (grátis), Ollama (local) ou outro provider em ⚙ Config.
+6. **Converse** — digite seu pedido; o Forge monta o prompt; você escolhe copiar ou **Forge pedir**; arquivos (PDF, planilha, HTML) são entregues na conversa.
+
+---
+
 ## Instalação
 
 ### 🐧 Linux (Ubuntu 20.04+ / Debian 11+)
@@ -94,7 +113,7 @@ sudo apt update && sudo apt install -y \
   build-essential pkg-config libssl-dev libsqlite3-dev git
 
 # 3. Clonar e rodar
-git clone https://github.com/seu-usuario/forge.git
+git clone https://github.com/rafaelferreira2312/forge.git
 cd forge
 cp .env.example .env        # configure sua API key
 cargo build --release
@@ -130,7 +149,7 @@ export OPENSSL_DIR=$(brew --prefix openssl)
 export PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig"
 
 # 3. Clonar e rodar
-git clone https://github.com/seu-usuario/forge.git
+git clone https://github.com/rafaelferreira2312/forge.git
 cd forge && cp .env.example .env
 cargo build --release && ./target/release/forge
 ```
@@ -146,7 +165,7 @@ cargo build --release && ./target/release/forge
 winget install Rustlang.Rustup
 
 # 3. Clonar e compilar
-git clone https://github.com/seu-usuario/forge.git
+git clone https://github.com/rafaelferreira2312/forge.git
 cd forge
 copy .env.example .env
 cargo build --release
@@ -156,7 +175,7 @@ cargo build --release
 ### 🐳 Docker (qualquer OS, sem instalar Rust)
 
 ```bash
-git clone https://github.com/seu-usuario/forge.git
+git clone https://github.com/rafaelferreira2312/forge.git
 cd forge
 cp .env.example .env
 docker compose up -d

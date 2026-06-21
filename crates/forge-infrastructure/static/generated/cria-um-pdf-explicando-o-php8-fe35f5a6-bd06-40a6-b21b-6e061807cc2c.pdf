@@ -1,0 +1,93 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 3194 >>
+stream
+BT /F1 11 Tf 50 780 Td (cria um pdf explicando o php8) Tj ET
+BT /F1 11 Tf 50 763 Td () Tj ET
+BT /F1 11 Tf 50 746 Td (**PHP8: Uma Nova Era em Desenvolvimento Web**) Tj ET
+BT /F1 11 Tf 50 729 Td () Tj ET
+BT /F1 11 Tf 50 712 Td (**Introducao**) Tj ET
+BT /F1 11 Tf 50 695 Td () Tj ET
+BT /F1 11 Tf 50 678 Td (O PHP8 e a mais recente versao da linguagem de programacao PHP, lancada em 2020. Com uma serie) Tj ET
+BT /F1 11 Tf 50 661 Td (de melhorias significativas em performance, seguranca e funcionalidades, o PHP8 representa uma) Tj ET
+BT /F1 11 Tf 50 644 Td (nova era em desenvolvimento web. Neste artigo, exploraremos as principais caracteristicas e) Tj ET
+BT /F1 11 Tf 50 627 Td (beneficios do PHP8.) Tj ET
+BT /F1 11 Tf 50 610 Td () Tj ET
+BT /F1 11 Tf 50 593 Td (**Melhorias em Performance**) Tj ET
+BT /F1 11 Tf 50 576 Td () Tj ET
+BT /F1 11 Tf 50 559 Td (O PHP8 traz varias melhorias em performance, incluindo:) Tj ET
+BT /F1 11 Tf 50 542 Td () Tj ET
+BT /F1 11 Tf 50 525 Td (* **Just-In-Time \(JIT\) Compilation**: O PHP8 utiliza uma compilacao JIT para melhorar a) Tj ET
+BT /F1 11 Tf 50 508 Td (execucao de codigo dinamico, reduzindo significativamente o tempo de resposta.) Tj ET
+BT /F1 11 Tf 50 491 Td (* **Improved Caching**: O PHP8 melhorou a implementacao de cache, permitindo que os) Tj ET
+BT /F1 11 Tf 50 474 Td (desenvolvedores armazenem e recuperem resultados de consultas de banco de dados mais) Tj ET
+BT /F1 11 Tf 50 457 Td (rapidamente.) Tj ET
+BT /F1 11 Tf 50 440 Td (* **Simplified Memory Management**: O PHP8 simplificou a gestao de memoria, reduzindo o risco) Tj ET
+BT /F1 11 Tf 50 423 Td (de vazamentos de memoria e melhorando a estabilidade do aplicativo.) Tj ET
+BT /F1 11 Tf 50 406 Td () Tj ET
+BT /F1 11 Tf 50 389 Td (**Seguranca**) Tj ET
+BT /F1 11 Tf 50 372 Td () Tj ET
+BT /F1 11 Tf 50 355 Td (O PHP8 traz varias melhorias em seguranca, incluindo:) Tj ET
+BT /F1 11 Tf 50 338 Td () Tj ET
+BT /F1 11 Tf 50 321 Td (* **Improved Error Handling**: O PHP8 melhorou a gestao de erros, permitindo que os) Tj ET
+BT /F1 11 Tf 50 304 Td (desenvolvedores capturem e tratem erros de forma mais eficaz.) Tj ET
+BT /F1 11 Tf 50 287 Td (* **Enhanced Input Validation**: O PHP8 melhorou a validacao de entrada de dados, reduzindo o) Tj ET
+BT /F1 11 Tf 50 270 Td (risco de ataques de injecao de SQL e outros tipos de ataques.) Tj ET
+BT /F1 11 Tf 50 253 Td (* **Better Support for HTTPS**: O PHP8 melhorou o suporte a HTTPS, permitindo que os) Tj ET
+BT /F1 11 Tf 50 236 Td (desenvolvedores criem aplicativos mais seguros e confiaveis.) Tj ET
+BT /F1 11 Tf 50 219 Td () Tj ET
+BT /F1 11 Tf 50 202 Td (**Funcionalidades**) Tj ET
+BT /F1 11 Tf 50 185 Td () Tj ET
+BT /F1 11 Tf 50 168 Td (O PHP8 traz varias funcionalidades novas e melhoradas, incluindo:) Tj ET
+BT /F1 11 Tf 50 151 Td () Tj ET
+BT /F1 11 Tf 50 134 Td (* **Named Arguments**: O PHP8 permite que os desenvolvedores usem nomes de argumentos em) Tj ET
+BT /F1 11 Tf 50 117 Td (funcoes, melhorando a legibilidade e a manutenibilidade do codigo.) Tj ET
+BT /F1 11 Tf 50 100 Td (* **Attributes**: O PHP8 introduz o conceito de atributos, permitindo que os desenvolvedores) Tj ET
+BT /F1 11 Tf 50 83 Td (adicione metadados a classes e metodos.) Tj ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 933 >>
+stream
+BT /F1 11 Tf 50 780 Td (* **Improved Support for Enums**: O PHP8 melhorou o suporte a enums, permitindo que os) Tj ET
+BT /F1 11 Tf 50 763 Td (desenvolvedores usem tipos de dados enumerados de forma mais eficaz.) Tj ET
+BT /F1 11 Tf 50 746 Td () Tj ET
+BT /F1 11 Tf 50 729 Td (**Conclusao**) Tj ET
+BT /F1 11 Tf 50 712 Td () Tj ET
+BT /F1 11 Tf 50 695 Td (O PHP8 e uma nova era em desenvolvimento web, oferecendo melhorias significativas em) Tj ET
+BT /F1 11 Tf 50 678 Td (performance, seguranca e funcionalidades. Com suas melhorias em JIT compilation, caching,) Tj ET
+BT /F1 11 Tf 50 661 Td (gestao de memoria e seguranca, o PHP8 e uma escolha segura e eficaz para desenvolvedores de) Tj ET
+BT /F1 11 Tf 50 644 Td (aplicativos web. Alem disso, suas funcionalidades novas e melhoradas, como named arguments e) Tj ET
+BT /F1 11 Tf 50 627 Td (attributes, permitem que os desenvolvedores criem aplicativos mais legiveis e manuteniveis.) Tj ET
+endstream
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000000317 00000 n 
+0000003563 00000 n 
+0000003689 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4673
+%%EOF

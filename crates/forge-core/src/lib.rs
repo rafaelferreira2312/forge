@@ -205,6 +205,9 @@ fn detect_intent(normalized: &str) -> IntentResult {
     let (primary, confidence) = if is_direct_answer_request(normalized) {
         signals.push("direct_answer".to_string());
         ("direct_answer", 0.9)
+    } else if is_recipe_request(normalized) {
+        signals.push("practical_recipe".to_string());
+        ("practical_recipe", 0.9)
     } else if is_creative_request(normalized) {
         signals.push("creative_engine".to_string());
         ("open_creative", 0.95)
@@ -490,7 +493,11 @@ pub fn assemble_executable_prompt(
         ),
 
         "general_assistance" => format!(
-            "{expertise_role}\n\nResponda sobre: {original_input}\n\nESTRUTURE ASSIM:\n1. Conceito central (direto, sem rodeios)\n2. Como funciona na prática\n3. Exemplos concretos e aplicáveis\n4. Quando usar / quando não usar\n5. Próximos passos ou aprofundamento{constraints_text}\n\n{expertise_modifier}"
+            "{expertise_role}\n\nResponda ao pedido do usuário de forma natural, útil e amigável: {original_input}\n\nREGRAS:\n- Entregue primeiro a resposta prática que a pessoa precisa.\n- Use seções curtas, listas claras e emojis discretos quando ajudarem a leitura.\n- Não force estrutura de aula se o pedido for simples.\n- Se houver risco de resposta genérica, seja específico e aplicável.\n- Finalize com uma pergunta curta oferecendo para o Forge executar/gerar o resultado, quando fizer sentido.{constraints_text}\n\n{expertise_modifier}"
+        ),
+
+        "practical_recipe" => format!(
+            "{expertise_role}\n\nO usuário quer uma resposta culinária prática: {original_input}\n\nENTREGUE COMO RECEITA REAL:\n🍊 Título claro\nIngredientes com quantidades coerentes\nModo de preparo em passos numerados\nTempo, forno/temperatura quando aplicável\nRendimento aproximado\nDicas simples para não errar\n\nREGRAS:\n- Não explique conceito antes da receita.\n- Não invente substituições tecnicamente ruins.\n- Não coloque ingredientes inesperados como obrigatórios; se sugerir, marque como opcional.\n- Use linguagem amigável e direta.\n\n{expertise_modifier}"
         ),
 
         "direct_answer" => format!(
@@ -812,6 +819,24 @@ pub fn is_direct_answer_request(input: &str) -> bool {
 
     direct_terms.iter().any(|term| l.contains(term))
         || (word_count <= 5 && contains_any(&l, &["ok", "certo", "funciona", "responda"]))
+}
+
+pub fn is_recipe_request(input: &str) -> bool {
+    let l = input.to_lowercase();
+    [
+        "bolo",
+        "receita",
+        "cozinhar",
+        "assar",
+        "fazer comida",
+        "ingredientes",
+        "modo de preparo",
+        "sobremesa",
+        "massa",
+        "laranja",
+    ]
+    .iter()
+    .any(|term| l.contains(term))
 }
 
 fn contains_any(input: &str, candidates: &[&str]) -> bool {

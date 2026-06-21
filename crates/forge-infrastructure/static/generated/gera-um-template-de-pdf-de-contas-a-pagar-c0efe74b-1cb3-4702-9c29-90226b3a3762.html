@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>gera um template de pdf de contas a pagar</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; color: #1f1f1f; }
+    h1 { color: #ff4500; }
+    pre { white-space: pre-wrap; font-family: inherit; }
+    @media print { body { margin: 24px; } }
+  </style>
+</head>
+<body>
+  <h1>gera um template de pdf de contas a pagar</h1>
+  <pre>**Template de PDF de Contas a Pagar**
+
+**Seção 1: Informações Gerais**
+==============================
+
+* **Nome da Empresa**: 🏢 Nome da empresa
+* **Endereço**: 📍 Endereço da empresa
+* **CPF/CNPJ**: 👥 CPF/CNPJ da empresa
+
+**Seção 2: Fatura**
+==================
+
+* **Número da Fatura**: 📝 Número da fatura
+* **Data de Emissão**: 📆 Data de emissão da fatura
+* **Data de Vencimento**: 📆 Data de vencimento da fatura
+
+**Seção 3: Detalhes da Fatura**
+=============================
+
+* **Descrição do Serviço**: 📝 Descrição do serviço prestado
+* **Valor do Serviço**: 💸 Valor do serviço prestado
+* **Total da Fatura**: 💸 Total da fatura
+
+**Seção 4: Contas a Pagar**
+=========================
+
+| **Nome do Fornecedor** | **Valor da Conta** | **Data de Vencimento** |
+| --- | --- | --- |
+| Fornecedor 1 | 100,00 | 30/06/2023 |
+| Fornecedor 2 | 200,00 | 15/07/2023 |
+| Fornecedor 3 | 300,00 | 31/07/2023 |
+
+**Seção 5: Total da Fatura**
+==========================
+
+* **Total das Contas a Pagar**: 💸 Total das contas a pagar
+* **Valor Total da Fatura**: 💸 Valor total da fatura
+
+**Código para Geração do PDF** (Python)
+```python
+from fpdf import FPDF
+
+class ContaAPagar:
+    def __init__(self, nome, valor, data_vencimento):
+        self.nome = nome
+        self.valor = valor
+        self.data_vencimento = data_vencimento
+
+class Fatura:
+    def __init__(self, numero, data_emissao, data_vencimento):
+        self.numero = numero
+        self.data_emissao = data_emissao
+        self.data_vencimento = data_vencimento
+        self.contas_a_pagar = []
+
+    def add_conta(self, conta):
+        self.contas_a_pagar.append(conta)
+
+    def calcular_total(self):
+        return sum(conta.valor for conta in self.contas_a_pagar)
+
+pdf = FPDF()
+
+# Seção 1: Informações Gerais
+pdf.add_page()
+pdf.set_font(&quot;Arial&quot;, size=12)
+pdf.cell(200, 10, txt=&quot;Nome da Empresa: Nome da empresa&quot;, ln=True, align=&#039;L&#039;)
+pdf.cell(200, 10, txt=&quot;Endereço: Endereço da empresa&quot;, ln=True, align=&#039;L&#039;)
+pdf.cell(200, 10, txt=&quot;CPF/CNPJ: CPF/CNPJ da empresa&quot;, ln=True, align=&#039;L&#039;)
+
+# Seção 2: Fatura
+pdf.ln(10)
+pdf.cell(200, 10, txt=&quot;Número da Fatura: Número da fatura&quot;, ln=True, align=&#039;L&#039;)
+pdf.cell(200, 10, txt=&quot;Data de Emissão: Data de emissão da fatura&quot;, ln=True, align=&#039;L&#039;)
+pdf.cell(200, 10, txt=&quot;Data de Vencimento: Data de vencimento da fatura&quot;, ln=True, align=&#039;L&#039;)
+
+# Seção 3: Detalhes da Fatura
+pdf.ln(10)
+pdf.cell(200, 10, txt=&quot;Descrição do Serviço: Descrição do serviço prestado&quot;, ln=True, align=&#039;L&#039;)
+pdf.cell(200, 10, txt=&quot;Valor do Serviço: Valor do serviço prestado&quot;, ln=True, align=&#039;L&#039;)
+pdf.cell(200, 10, txt=&quot;Total da Fatura: Total da fatura&quot;, ln=True, align=&#039;L&#039;)
+
+# Seção 4: Contas a Pagar
+pdf.ln(10)
+pdf.cell(0, 10, txt=&quot;Nome do Fornecedor\tValor da Conta\tData de Vencimento&quot;, ln=True, align=&#039;L&#039;)
+for conta in fatura.contas_a_pagar:
+    pdf.cell(0, 10, txt=f&quot;{conta.nome}\t{conta.valor:.2f}\t{conta.data_vencimento}&quot;, ln=True, align=&#039;L&#039;)
+
+# Seção 5: Total da Fatura
+pdf.ln(10)
+pdf.cell(200, 10, txt=&quot;Total das Contas a Pagar: Total das contas a pagar&quot;, ln=True, align=&#039;L&#039;)
+pdf.cell(200, 10, txt=f&quot;Valor Total da Fatura: {fatura.calcular_total():.2f}&quot;, ln=True, align=&#039;L&#039;)
+
+pdf.output(&quot;contas_a_pagar.pdf&quot;)
+
+# Você gostaria de executar o código para gerar o PDF? (sim/não)</pre>
+</body>
+</html>

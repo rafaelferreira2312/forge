@@ -6,9 +6,11 @@ pub const API_ROUTES: &[(&str, &str)] = &[
     ("POST", "/api/providers/key"),
     ("POST", "/api/chat"),
     ("POST", "/api/feedback"),
+    ("POST", "/api/files/generate"),
     ("POST", "/api/leads/dna"),
     ("POST", "/api/install/ollama-model"),
     ("GET", "/api/health"),
     ("GET", "/api/stats"),
+    ("GET", "/api/usage"),
     ("GET", "/api/history"),
 ];

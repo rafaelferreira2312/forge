@@ -1,0 +1,73 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 1769 >>
+stream
+BT /F1 11 Tf 50 780 Td (gera um template de pdf de contas a pagar) Tj ET
+BT /F1 11 Tf 50 763 Td () Tj ET
+BT /F1 11 Tf 50 746 Td (**T?TULO**) Tj ET
+BT /F1 11 Tf 50 729 Td () Tj ET
+BT /F1 11 Tf 50 712 Td (CONTAS A PAGAR) Tj ET
+BT /F1 11 Tf 50 695 Td () Tj ET
+BT /F1 11 Tf 50 678 Td (**DATA DE EMISS?O**) Tj ET
+BT /F1 11 Tf 50 661 Td () Tj ET
+BT /F1 11 Tf 50 644 Td (______________________) Tj ET
+BT /F1 11 Tf 50 627 Td () Tj ET
+BT /F1 11 Tf 50 610 Td (**NOME DA EMPRESA**) Tj ET
+BT /F1 11 Tf 50 593 Td () Tj ET
+BT /F1 11 Tf 50 576 Td (______________________) Tj ET
+BT /F1 11 Tf 50 559 Td () Tj ET
+BT /F1 11 Tf 50 542 Td (**ENDERE?O DA EMPRESA**) Tj ET
+BT /F1 11 Tf 50 525 Td () Tj ET
+BT /F1 11 Tf 50 508 Td (______________________) Tj ET
+BT /F1 11 Tf 50 491 Td () Tj ET
+BT /F1 11 Tf 50 474 Td (**NUMERO DE PAGAMENTO**) Tj ET
+BT /F1 11 Tf 50 457 Td () Tj ET
+BT /F1 11 Tf 50 440 Td (______________________) Tj ET
+BT /F1 11 Tf 50 423 Td () Tj ET
+BT /F1 11 Tf 50 406 Td (**DATA DE VENCIMENTO**) Tj ET
+BT /F1 11 Tf 50 389 Td () Tj ET
+BT /F1 11 Tf 50 372 Td (______________________) Tj ET
+BT /F1 11 Tf 50 355 Td () Tj ET
+BT /F1 11 Tf 50 338 Td (**D?ZIMO**) Tj ET
+BT /F1 11 Tf 50 321 Td () Tj ET
+BT /F1 11 Tf 50 304 Td (______________________) Tj ET
+BT /F1 11 Tf 50 287 Td () Tj ET
+BT /F1 11 Tf 50 270 Td (**VALOR A PAGAR**) Tj ET
+BT /F1 11 Tf 50 253 Td () Tj ET
+BT /F1 11 Tf 50 236 Td (______________________) Tj ET
+BT /F1 11 Tf 50 219 Td () Tj ET
+BT /F1 11 Tf 50 202 Td (**FORMA DE PAGAMENTO**) Tj ET
+BT /F1 11 Tf 50 185 Td () Tj ET
+BT /F1 11 Tf 50 168 Td (______________________) Tj ET
+BT /F1 11 Tf 50 151 Td () Tj ET
+BT /F1 11 Tf 50 134 Td (**BANCO**) Tj ET
+BT /F1 11 Tf 50 117 Td () Tj ET
+BT /F1 11 Tf 50 100 Td (______________________) Tj ET
+BT /F1 11 Tf 50 83 Td () Tj ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2132
+%%EOF

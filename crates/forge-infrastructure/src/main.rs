@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::SqlitePool;
+use std::fs;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::process::Command;
@@ -32,6 +33,11 @@ struct AppState {
 #[derive(Debug, Deserialize)]
 struct HistoryQuery {
     limit: Option<usize>,
+}
+
+#[derive(Debug, Deserialize)]
+struct EngineerQuery {
+    record: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -98,6 +104,24 @@ struct HealthResponse {
     providers: ProvidersResponse,
 }
 
+#[derive(Debug, Serialize)]
+struct UsageResponse {
+    total_requests: u32,
+    total_tokens: u32,
+    estimated_cost_usd: f32,
+    estimated_cost_brl: f32,
+    by_provider: Vec<ProviderUsage>,
+}
+
+#[derive(Debug, Serialize)]
+struct ProviderUsage {
+    provider: String,
+    requests: u32,
+    tokens: u32,
+    estimated_cost_usd: f32,
+    note: String,
+}
+
 #[derive(Debug, Deserialize)]
 struct InstallModelRequest {
     model: String,
@@ -121,6 +145,23 @@ struct LeadDnaRequest {
 struct LeadDnaResponse {
     saved: bool,
     dna: String,
+    message: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct GenerateFileRequest {
+    filename: Option<String>,
+    file_type: String,
+    title: Option<String>,
+    content: String,
+}
+
+#[derive(Debug, Serialize)]
+struct GenerateFileResponse {
+    success: bool,
+    filename: String,
+    url: String,
+    mime_type: String,
     message: String,
 }
 
@@ -148,12 +189,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/providers/key", post(save_provider_key))
         .route("/api/chat", post(chat))
         .route("/api/feedback", post(feedback))
+        .route("/api/files/generate", post(generate_file))
         .route("/api/leads/dna", post(save_lead_dna))
         .route("/api/install/ollama-model", post(install_ollama_model))
         .route("/api/health", get(health))
         .route("/api/patterns", get(patterns))
         .route("/api/history", get(history))
         .route("/api/stats", get(stats))
+        .route("/api/usage", get(usage))
         .fallback_service(ServeDir::new(static_dir).append_index_html_on_directories(true))
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
@@ -243,13 +286,19 @@ async fn run_schema(db: &SqlitePool) -> Result<(), sqlx::Error> {
 
 async fn engineer(
     State(state): State<AppState>,
+    Query(query): Query<EngineerQuery>,
     Json(request): Json<EngineerRequest>,
 ) -> Result<Json<forge_core::EngineerResponse>, impl IntoResponse> {
     if request.input.trim().is_empty() {
         return Err((StatusCode::BAD_REQUEST, "input must not be empty"));
     }
 
-    Ok(Json(state.engine.engineer(request)))
+    let response = if query.record.unwrap_or(true) {
+        state.engine.engineer(request)
+    } else {
+        state.engine.preview(request)
+    };
+    Ok(Json(response))
 }
 
 async fn get_profile(State(state): State<AppState>) -> Json<forge_application::ProfileResponse> {
@@ -496,6 +545,672 @@ async fn feedback(
     Ok(StatusCode::OK)
 }
 
+async fn generate_file(
+    Json(request): Json<GenerateFileRequest>,
+) -> Result<Json<GenerateFileResponse>, (StatusCode, String)> {
+    if request.content.trim().is_empty() {
+        return Err((StatusCode::BAD_REQUEST, "content must not be empty".to_string()));
+    }
+
+    let Some((extension, mime_type)) = file_type_info(&request.file_type) else {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "tipo de arquivo nao suportado".to_string(),
+        ));
+    };
+
+    let base_name = request
+        .filename
+        .as_deref()
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or_else(|| request.title.as_deref().unwrap_or("forge-arquivo"));
+    let safe_name = sanitize_filename(base_name);
+    let filename = format!("{safe_name}-{id}.{extension}", id = Uuid::new_v4());
+    let generated_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("static")
+        .join("generated");
+    fs::create_dir_all(&generated_dir).map_err(|error| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("falha ao criar pasta de arquivos: {error}"),
+        )
+    })?;
+
+    let title = request.title.as_deref().unwrap_or("Arquivo gerado pelo Forge");
+    let content = render_file_content(&request.file_type, title, &request.content);
+    let path = generated_dir.join(&filename);
+    fs::write(&path, content).map_err(|error| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("falha ao gravar arquivo: {error}"),
+        )
+    })?;
+
+    Ok(Json(GenerateFileResponse {
+        success: true,
+        filename: filename.clone(),
+        url: format!("/generated/{filename}"),
+        mime_type: mime_type.to_string(),
+        message: "Arquivo gerado com sucesso.".to_string(),
+    }))
+}
+
+fn file_type_info(file_type: &str) -> Option<(&'static str, &'static str)> {
+    match file_type.trim().to_lowercase().as_str() {
+        "txt" => Some(("txt", "text/plain; charset=utf-8")),
+        "md" | "markdown" => Some(("md", "text/markdown; charset=utf-8")),
+        "html" => Some(("html", "text/html; charset=utf-8")),
+        "json" => Some(("json", "application/json; charset=utf-8")),
+        "csv" => Some(("csv", "text/csv; charset=utf-8")),
+        "svg" => Some(("svg", "image/svg+xml; charset=utf-8")),
+        "doc" | "word" => Some(("doc", "application/msword; charset=utf-8")),
+        "xls" | "excel" => Some(("xls", "application/vnd.ms-excel; charset=utf-8")),
+        "pdf" | "pdf-html" => Some(("html", "text/html; charset=utf-8")),
+        _ => None,
+    }
+}
+
+fn render_file_content(file_type: &str, title: &str, content: &str) -> String {
+    let clean_content = clean_artifact_markdown(content);
+    match file_type.trim().to_lowercase().as_str() {
+        "pdf" | "pdf-html" | "html" | "doc" | "word" => {
+            designed_document_html(title, &clean_content)
+        }
+        "xls" | "excel" => styled_spreadsheet_html(title, &clean_content),
+        "json" => json!({
+            "title": title,
+            "generated_by": "FORGE",
+            "content": clean_content,
+        })
+        .to_string(),
+        "csv" => content_to_csv(&clean_content),
+        "svg" => content_to_svg(title, &clean_content),
+        _ => clean_content,
+    }
+}
+
+fn clean_artifact_markdown(content: &str) -> String {
+    content
+        .lines()
+        .filter(|line| !line.trim_start().starts_with("```"))
+        .map(str::trim_end)
+        .collect::<Vec<_>>()
+        .join("\n")
+        .trim()
+        .to_string()
+}
+
+fn designed_document_html(title: &str, content: &str) -> String {
+    let body = content_lines_to_html(content);
+    format!(
+        r#"<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{title}</title>
+  <style>
+    :root {{
+      --ember: #FF4500;
+      --ink: #151515;
+      --muted: #5C5C5C;
+      --paper: #FFFFFF;
+      --soft: #FFF7F2;
+      --line: #E8E2DC;
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      margin: 0;
+      background: #F3F0EB;
+      color: var(--ink);
+      font-family: "Segoe UI", Inter, Arial, sans-serif;
+      line-height: 1.65;
+    }}
+    .page {{
+      max-width: 820px;
+      margin: 32px auto;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.08);
+    }}
+    .cover {{
+      padding: 42px 48px 34px;
+      background: linear-gradient(135deg, #111 0%, #1E1E1E 55%, #2A1208 100%);
+      color: #FFF;
+    }}
+    .cover-badge {{
+      display: inline-block;
+      font: 600 11px/1 "Segoe UI", sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ember);
+      border: 1px solid rgba(255,69,0,0.35);
+      background: rgba(255,69,0,0.12);
+      padding: 6px 12px;
+      border-radius: 999px;
+      margin-bottom: 18px;
+    }}
+    .cover h1 {{
+      margin: 0 0 10px;
+      font-size: clamp(28px, 4vw, 40px);
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }}
+    .cover p {{
+      margin: 0;
+      color: rgba(255,255,255,0.72);
+      font-size: 15px;
+      max-width: 620px;
+    }}
+    .content {{
+      padding: 36px 48px 44px;
+    }}
+    .section-title {{
+      margin: 28px 0 12px;
+      font-size: 20px;
+      line-height: 1.25;
+      color: var(--ember);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      padding-bottom: 8px;
+      border-bottom: 2px solid rgba(255,69,0,0.18);
+    }}
+    .section-title:first-child {{ margin-top: 0; }}
+    .doc-paragraph {{
+      margin: 0 0 14px;
+      font-size: 15px;
+      color: #2A2A2A;
+    }}
+    .doc-list, .doc-ol {{
+      margin: 0 0 16px;
+      padding-left: 22px;
+    }}
+    .doc-list li, .doc-ol li {{
+      margin: 0 0 8px;
+      font-size: 15px;
+    }}
+    .callout {{
+      margin: 18px 0;
+      padding: 16px 18px;
+      border-radius: 12px;
+      background: var(--soft);
+      border: 1px solid rgba(255,69,0,0.16);
+    }}
+    .callout strong {{ color: var(--ember); }}
+    .footer {{
+      padding: 16px 48px 22px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }}
+    .footer strong {{ color: var(--ember); }}
+    @media print {{
+      body {{ background: #FFF; }}
+      .page {{ margin: 0; border: 0; border-radius: 0; box-shadow: none; }}
+      .cover {{ break-after: avoid; }}
+    }}
+  </style>
+</head>
+<body>
+  <article class="page">
+    <header class="cover">
+      <div class="cover-badge">Documento Forge</div>
+      <h1>{title}</h1>
+      <p>Entrega final pronta para apresentar, compartilhar ou imprimir como PDF.</p>
+    </header>
+    <main class="content">
+      {body}
+    </main>
+    <footer class="footer">
+      <span>Gerado por <strong>FORGE</strong> · Rust Prompt Engineer</span>
+      <span>Use Imprimir → Salvar como PDF no navegador</span>
+    </footer>
+  </article>
+</body>
+</html>"#,
+        title = escape_html(title),
+        body = body
+    )
+}
+
+fn content_lines_to_html(content: &str) -> String {
+    let mut html = String::new();
+    let mut in_ul = false;
+    let mut in_ol = false;
+
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            close_html_lists(&mut html, &mut in_ul, &mut in_ol);
+            continue;
+        }
+
+        if let Some(text) = trimmed.strip_prefix("### ") {
+            close_html_lists(&mut html, &mut in_ul, &mut in_ol);
+            html.push_str(&format!(
+                "<h3 class=\"section-title\">{}</h3>\n",
+                format_inline_html(text)
+            ));
+            continue;
+        }
+        if let Some(text) = trimmed.strip_prefix("## ") {
+            close_html_lists(&mut html, &mut in_ul, &mut in_ol);
+            html.push_str(&format!(
+                "<h2 class=\"section-title\">{}</h2>\n",
+                format_inline_html(text)
+            ));
+            continue;
+        }
+        if let Some(text) = trimmed.strip_prefix("# ") {
+            close_html_lists(&mut html, &mut in_ul, &mut in_ol);
+            html.push_str(&format!(
+                "<h2 class=\"section-title\">{}</h2>\n",
+                format_inline_html(text)
+            ));
+            continue;
+        }
+        if let Some(text) = trimmed
+            .strip_prefix("- ")
+            .or_else(|| trimmed.strip_prefix("* "))
+            .or_else(|| trimmed.strip_prefix("• "))
+        {
+            if !in_ul {
+                close_html_lists(&mut html, &mut in_ul, &mut in_ol);
+                html.push_str("<ul class=\"doc-list\">\n");
+                in_ul = true;
+            }
+            html.push_str(&format!("<li>{}</li>\n", format_inline_html(text)));
+            continue;
+        }
+        if let Some(text) = parse_numbered_list_item(trimmed) {
+            if !in_ol {
+                close_html_lists(&mut html, &mut in_ul, &mut in_ol);
+                html.push_str("<ol class=\"doc-ol\">\n");
+                in_ol = true;
+            }
+            html.push_str(&format!("<li>{}</li>\n", format_inline_html(text)));
+            continue;
+        }
+        if is_section_header(trimmed) {
+            close_html_lists(&mut html, &mut in_ul, &mut in_ol);
+            let label = trimmed.trim_end_matches(':');
+            html.push_str(&format!(
+                "<h2 class=\"section-title\">{}</h2>\n",
+                format_inline_html(label)
+            ));
+            continue;
+        }
+        if trimmed.starts_with("> ") {
+            close_html_lists(&mut html, &mut in_ul, &mut in_ol);
+            html.push_str(&format!(
+                "<div class=\"callout\">{}</div>\n",
+                format_inline_html(trimmed.trim_start_matches("> "))
+            ));
+            continue;
+        }
+
+        close_html_lists(&mut html, &mut in_ul, &mut in_ol);
+        html.push_str(&format!(
+            "<p class=\"doc-paragraph\">{}</p>\n",
+            format_inline_html(trimmed)
+        ));
+    }
+
+    close_html_lists(&mut html, &mut in_ul, &mut in_ol);
+    if html.trim().is_empty() {
+        html.push_str("<p class=\"doc-paragraph\">Conteúdo gerado pelo Forge.</p>\n");
+    }
+    html
+}
+
+fn parse_numbered_list_item(line: &str) -> Option<&str> {
+    let digit_len = line.chars().take_while(|c| c.is_ascii_digit()).count();
+    if digit_len == 0 {
+        return None;
+    }
+    let rest = line[digit_len..].trim_start();
+    rest.strip_prefix(". ")
+        .or_else(|| rest.strip_prefix('.'))
+        .map(str::trim)
+}
+
+fn close_html_lists(html: &mut String, in_ul: &mut bool, in_ol: &mut bool) {
+    if *in_ul {
+        html.push_str("</ul>\n");
+        *in_ul = false;
+    }
+    if *in_ol {
+        html.push_str("</ol>\n");
+        *in_ol = false;
+    }
+}
+
+fn is_section_header(line: &str) -> bool {
+    let lower = line.to_lowercase();
+    let keywords = [
+        "ingredientes",
+        "modo de preparo",
+        "preparo",
+        "instruções",
+        "instrucoes",
+        "introdução",
+        "introducao",
+        "conclusão",
+        "conclusao",
+        "resumo",
+        "benefícios",
+        "beneficios",
+        "dicas",
+        "variações",
+        "variacoes",
+        "informações nutricionais",
+        "informacoes nutricionais",
+        "tempo de preparo",
+        "rendimento",
+        "passo a passo",
+        "materiais",
+        "escopo",
+        "objetivo",
+        "metodologia",
+        "resultados",
+        "anexos",
+        "cláusulas",
+        "clausulas",
+        "partes",
+        "vigência",
+        "vigencia",
+    ];
+    keywords.iter().any(|keyword| {
+        lower == *keyword
+            || lower.starts_with(&format!("{keyword}:"))
+            || lower.starts_with(&format!("{keyword} -"))
+    }) || (line.len() <= 60 && line.ends_with(':'))
+}
+
+fn format_inline_html(text: &str) -> String {
+    let mut output = String::new();
+    let mut rest = text;
+    while let Some(start) = rest.find("**") {
+        output.push_str(&escape_html(&rest[..start]));
+        rest = &rest[start + 2..];
+        if let Some(end) = rest.find("**") {
+            output.push_str("<strong>");
+            output.push_str(&escape_html(&rest[..end]));
+            output.push_str("</strong>");
+            rest = &rest[end + 2..];
+        } else {
+            output.push_str("**");
+            break;
+        }
+    }
+    output.push_str(&escape_html(rest));
+    output
+}
+
+fn styled_spreadsheet_html(title: &str, content: &str) -> String {
+    let rows: Vec<Vec<String>> = content
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .filter(|line| !line.trim().chars().all(|character| matches!(character, '|' | '-' | ':' | ' ')))
+        .map(|line| {
+            split_table_cells(line)
+                .into_iter()
+                .map(|cell| cell.trim().to_string())
+                .collect()
+        })
+        .collect();
+
+    let (header, body_rows) = if rows.is_empty() {
+        (vec!["Coluna".to_string(), "Conteúdo".to_string()], vec![])
+    } else {
+        let header = rows[0].clone();
+        (header, rows[1..].to_vec())
+    };
+
+    let header_html = header
+        .iter()
+        .map(|cell| format!("<th>{}</th>", escape_html(cell)))
+        .collect::<Vec<_>>()
+        .join("");
+    let body_html = body_rows
+        .iter()
+        .map(|row| {
+            let cells = row
+                .iter()
+                .map(|cell| format!("<td>{}</td>", escape_html(cell)))
+                .collect::<Vec<_>>()
+                .join("");
+            format!("<tr>{cells}</tr>")
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    format!(
+        r#"<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>{title}</title>
+  <style>
+    body {{ font-family: "Segoe UI", Arial, sans-serif; background:#F3F0EB; margin:0; padding:28px; }}
+    .sheet {{
+      max-width: 980px; margin: 0 auto; background:#FFF; border-radius:16px; overflow:hidden;
+      border:1px solid #E8E2DC; box-shadow:0 18px 50px rgba(0,0,0,0.08);
+    }}
+    .head {{ padding:24px 28px; background:linear-gradient(135deg,#111,#2A1208); color:#FFF; }}
+    .head h1 {{ margin:0; font-size:28px; color:#FF4500; }}
+    table {{ width:100%; border-collapse:collapse; }}
+    th, td {{ padding:12px 14px; border-bottom:1px solid #EEE; text-align:left; font-size:14px; }}
+    tr:nth-child(even) td {{ background:#FFF7F2; }}
+    th {{ background:#FF4500; color:#FFF; font-size:12px; letter-spacing:0.06em; text-transform:uppercase; }}
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="head"><h1>{title}</h1></div>
+    <table><thead><tr>{header_html}</tr></thead><tbody>{body_html}</tbody></table>
+  </div>
+</body>
+</html>"#,
+        title = escape_html(title),
+        header_html = header_html,
+        body_html = body_html
+    )
+}
+
+fn split_table_cells(line: &str) -> Vec<&str> {
+    let trimmed = line.trim().trim_matches('|');
+    if trimmed.contains('|') {
+        trimmed.split('|').collect()
+    } else if trimmed.contains(';') {
+        trimmed.split(';').collect()
+    } else if trimmed.contains('\t') {
+        trimmed.split('\t').collect()
+    } else if trimmed.contains(',') {
+        trimmed.split(',').collect()
+    } else {
+        vec![trimmed]
+    }
+}
+
+fn content_to_csv(content: &str) -> String {
+    let mut csv = String::from("linha,conteudo\n");
+    for (index, line) in content.lines().enumerate() {
+        csv.push_str(&format!("{},\"{}\"\n", index + 1, line.replace('"', "\"\"")));
+    }
+    csv
+}
+
+fn content_to_svg(title: &str, content: &str) -> String {
+    let lines = content
+        .lines()
+        .take(10)
+        .enumerate()
+        .map(|(index, line)| {
+            format!(
+                r##"<text x="32" y="{}" fill="#f0f0f0" font-family="monospace" font-size="18">{}</text>"##,
+                110 + index * 28,
+                escape_html(line)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    format!(
+        r##"<svg width="900" height="520" viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg">
+<rect width="900" height="520" rx="24" fill="#0D0D0D"/>
+<text x="32" y="58" fill="#FF4500" font-family="Arial" font-size="32" font-weight="800">{}</text>
+{}
+</svg>"##,
+        escape_html(title),
+        lines
+    )
+}
+
+fn simple_pdf(title: &str, content: &str) -> String {
+    let mut lines = Vec::new();
+    lines.push(title.to_string());
+    lines.push(String::new());
+    for line in content.lines() {
+        let line = line.trim_end();
+        if line.chars().count() <= 95 {
+            lines.push(line.to_string());
+            continue;
+        }
+        let mut current = String::new();
+        for word in line.split_whitespace() {
+            if current.chars().count() + word.chars().count() + 1 > 95 {
+                lines.push(current.trim().to_string());
+                current.clear();
+            }
+            current.push_str(word);
+            current.push(' ');
+        }
+        if !current.trim().is_empty() {
+            lines.push(current.trim().to_string());
+        }
+    }
+
+    let page_chunks = lines
+        .chunks(42)
+        .map(|chunk| chunk.to_vec())
+        .collect::<Vec<_>>();
+    let page_count = page_chunks.len().max(1);
+    let mut objects = Vec::new();
+    objects.push("<< /Type /Catalog /Pages 2 0 R >>".to_string());
+
+    let kids = (0..page_count)
+        .map(|index| format!("{} 0 R", 4 + index * 2))
+        .collect::<Vec<_>>()
+        .join(" ");
+    objects.push(format!("<< /Type /Pages /Kids [{}] /Count {} >>", kids, page_count));
+    objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>".to_string());
+
+    for (page_index, chunk) in page_chunks.iter().enumerate() {
+        let page_object = 4 + page_index * 2;
+        let content_object = page_object + 1;
+        objects.push(format!(
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents {} 0 R >>",
+            content_object
+        ));
+        let text_stream = chunk
+            .iter()
+            .enumerate()
+            .map(|(line_index, line)| {
+                let y = 780 - (line_index as i32 * 17);
+                format!("BT /F1 11 Tf 50 {} Td ({}) Tj ET", y, escape_pdf_text(line))
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        objects.push(format!(
+            "<< /Length {} >>\nstream\n{}\nendstream",
+            text_stream.len(),
+            text_stream
+        ));
+    }
+
+    let mut pdf = String::from("%PDF-1.4\n");
+    let mut offsets = Vec::new();
+    for (index, object) in objects.iter().enumerate() {
+        offsets.push(pdf.len());
+        pdf.push_str(&format!("{} 0 obj\n{}\nendobj\n", index + 1, object));
+    }
+    let xref_start = pdf.len();
+    pdf.push_str(&format!("xref\n0 {}\n0000000000 65535 f \n", objects.len() + 1));
+    for offset in offsets {
+        pdf.push_str(&format!("{offset:010} 00000 n \n"));
+    }
+    pdf.push_str(&format!(
+        "trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{}\n%%EOF\n",
+        objects.len() + 1,
+        xref_start
+    ));
+    pdf
+}
+
+fn escape_pdf_text(value: &str) -> String {
+    transliterate_latin(value)
+        .replace('\\', "\\\\")
+        .replace('(', "\\(")
+        .replace(')', "\\)")
+}
+
+fn transliterate_latin(value: &str) -> String {
+    value
+        .chars()
+        .map(|character| match character {
+            'á' | 'à' | 'â' | 'ã' | 'ä' => 'a',
+            'Á' | 'À' | 'Â' | 'Ã' | 'Ä' => 'A',
+            'é' | 'è' | 'ê' | 'ë' => 'e',
+            'É' | 'È' | 'Ê' | 'Ë' => 'E',
+            'í' | 'ì' | 'î' | 'ï' => 'i',
+            'Í' | 'Ì' | 'Î' | 'Ï' => 'I',
+            'ó' | 'ò' | 'ô' | 'õ' | 'ö' => 'o',
+            'Ó' | 'Ò' | 'Ô' | 'Õ' | 'Ö' => 'O',
+            'ú' | 'ù' | 'û' | 'ü' => 'u',
+            'Ú' | 'Ù' | 'Û' | 'Ü' => 'U',
+            'ç' => 'c',
+            'Ç' => 'C',
+            character if character.is_ascii() => character,
+            _ => ' ',
+        })
+        .collect()
+}
+
+fn sanitize_filename(value: &str) -> String {
+    let sanitized = value
+        .chars()
+        .map(|character| {
+            if character.is_ascii_alphanumeric() || matches!(character, '-' | '_') {
+                character.to_ascii_lowercase()
+            } else {
+                '-'
+            }
+        })
+        .collect::<String>()
+        .trim_matches('-')
+        .to_string();
+    if sanitized.is_empty() {
+        "forge-arquivo".to_string()
+    } else {
+        sanitized.chars().take(48).collect()
+    }
+}
+
+fn escape_html(value: &str) -> String {
+    value
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#039;")
+}
+
 async fn patterns() -> Json<forge_adapters::AdaptivePatternProfile> {
     Json(mock_adaptive_patterns())
 }
@@ -509,6 +1224,86 @@ async fn history(
 
 async fn stats(State(state): State<AppState>) -> Json<forge_application::EngineStats> {
     Json(state.engine.stats())
+}
+
+async fn usage(State(state): State<AppState>) -> Json<UsageResponse> {
+    let rows = sqlx::query_as::<_, (String, Option<i64>, String, String)>(
+        r#"
+        SELECT provider, tokens_used, prompt_used, response
+        FROM chat_history
+        "#,
+    )
+    .fetch_all(&state.db)
+    .await
+    .unwrap_or_default();
+
+    let mut by_provider = std::collections::BTreeMap::<String, (u32, u32)>::new();
+    for (provider, tokens_used, prompt, response) in rows {
+        let estimated_tokens = tokens_used
+            .map(|value| value.max(0) as u32)
+            .unwrap_or_else(|| ((prompt.len() + response.len()) as f32 / 4.0).ceil() as u32);
+        let entry = by_provider.entry(provider).or_insert((0, 0));
+        entry.0 += 1;
+        entry.1 += estimated_tokens;
+    }
+
+    let mut total_requests = 0u32;
+    let mut total_tokens = 0u32;
+    let mut estimated_cost_usd = 0.0f32;
+    let by_provider = by_provider
+        .into_iter()
+        .map(|(provider, (requests, tokens))| {
+            let cost = estimated_cost(&provider, tokens);
+            total_requests += requests;
+            total_tokens += tokens;
+            estimated_cost_usd += cost;
+            ProviderUsage {
+                note: usage_note(&provider).to_string(),
+                provider,
+                requests,
+                tokens,
+                estimated_cost_usd: cost,
+            }
+        })
+        .collect::<Vec<_>>();
+
+    Json(UsageResponse {
+        total_requests,
+        total_tokens,
+        estimated_cost_usd,
+        estimated_cost_brl: estimated_cost_usd * 5.5,
+        by_provider,
+    })
+}
+
+fn estimated_cost(provider: &str, tokens: u32) -> f32 {
+    let per_million = match provider {
+        "ollama" => 0.0,
+        "groq" => 0.0,
+        "openrouter" => 0.05,
+        "gemini" => 0.10,
+        "openai" => 0.60,
+        "claude" => 0.80,
+        "mistral" => 0.20,
+        "deepseek" => 0.14,
+        "together" => 0.20,
+        "cerebras" => 0.0,
+        "huggingface" => 0.0,
+        _ => 0.25,
+    };
+    (tokens as f32 / 1_000_000.0) * per_million
+}
+
+fn usage_note(provider: &str) -> &'static str {
+    match provider {
+        "ollama" => "Local e gratuito; custo zero, depende da sua maquina.",
+        "groq" => "Rapido e com free tier; ideal como padrao quando configurado.",
+        "openrouter" => "Gateway com modelos free e pagos; custo varia por modelo.",
+        "claude" => "Alta qualidade; custo estimado maior.",
+        "openai" => "Modelos gerais fortes; custo estimado medio.",
+        "gemini" => "Bom custo-beneficio em modelos Flash.",
+        _ => "Custo estimado; confirme no painel oficial do provider.",
+    }
 }
 
 async fn load_providers(state: &AppState) -> ProvidersResponse {

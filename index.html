@@ -661,7 +661,106 @@
     margin-bottom: 12px;
   }
 
-  /* ── COMPARATIVO ── */
+  /* ── REPOSITÓRIO + COMO USAR ── */
+  .repo-card {
+    max-width: 760px;
+    margin: 0 auto 40px;
+    padding: 20px 24px;
+    border: 1px solid rgba(255,69,0,0.25);
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(255,69,0,0.08), rgba(20,20,20,0.9));
+    text-align: center;
+  }
+  .repo-card .repo-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .repo-card a.repo-url {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ember);
+    text-decoration: none;
+    word-break: break-all;
+  }
+  .repo-card a.repo-url:hover { text-decoration: underline; }
+  .repo-card p { color: var(--dim); font-size: 13px; margin-top: 10px; }
+
+  .usage-steps { max-width: 760px; margin: 0 auto; }
+  .usage-step {
+    display: flex;
+    gap: 18px;
+    margin-bottom: 28px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .usage-step:last-child { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
+  .usage-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255,69,0,0.12);
+    border: 1px solid rgba(255,69,0,0.3);
+    color: var(--ember);
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  .usage-body h4 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px;
+    margin-bottom: 6px;
+  }
+  .usage-body p { color: var(--dim); font-size: 14px; line-height: 1.65; margin-bottom: 8px; }
+  .usage-body a { color: var(--ember); }
+  .usage-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(78,201,78,0.1);
+    color: #4EC94E;
+    border: 1px solid rgba(78,201,78,0.25);
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+
+  .hero-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.7s forwards;
+  }
+  .hero-cta a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    transition: all 0.15s;
+  }
+  .hero-cta .btn-dna {
+    background: var(--ember);
+    color: #FFF;
+    font-weight: 700;
+  }
+  .hero-cta .btn-dna:hover { filter: brightness(1.08); }
+  .hero-cta .btn-outline {
+    border: 1px solid var(--border);
+    color: var(--dim);
+  }
+  .hero-cta .btn-outline:hover { color: var(--text); border-color: var(--dim); }
+
   .compare-table {
     width: 100%;
     border-collapse: collapse;
@@ -967,6 +1066,7 @@
   <ul class="nav-links">
     <li><a href="#origin">Origem</a></li>
     <li><a href="#dna">DNA</a></li>
+    <li><a href="#usage">Como usar</a></li>
     <li><a href="#how">Como funciona</a></li>
     <li><a href="#learn">Aprendizado</a></li>
     <li><a href="#install">Instalar</a></li>
@@ -986,6 +1086,12 @@
   <p class="hero-sub">
     O engenheiro de prompt que roda na sua máquina, aprende com você e entrega para qualquer IA o briefing perfeito — de uma palavra só.
   </p>
+
+  <div class="hero-cta">
+    <a href="#dna" class="btn-dna">1. Gerar DNA Forge</a>
+    <a href="#install" class="btn-outline">2. Instalar</a>
+    <a href="https://github.com/rafaelferreira2312/forge" class="btn-outline" target="_blank" rel="noreferrer">Repositório GitHub →</a>
+  </div>
 
   <div class="live-terminal">
     <div class="terminal-bar">
@@ -1079,7 +1185,7 @@
   <span class="section-label reveal">DNA Forge</span>
   <h2 class="section-title reveal">Cada usuário precisa<br>de um DNA único.</h2>
   <p class="section-body reveal">
-    Antes de usar o Forge de verdade, a pessoa ou empresa gera um DNA próprio. Esse DNA conecta nome, contato e identidade de uso para personalizar prompts, histórico, onboarding e futuras automações. Também vira um lead qualificado para acompanhamento.
+    <strong>Sim, já está implementado.</strong> Antes do primeiro uso real do Forge, gere seu DNA nesta página. Ele identifica você ou sua empresa, personaliza saudações e prompts no app, e registra o lead no backend quando o Forge estiver rodando em <code style="color:var(--ember)">localhost:3000</code>.
   </p>
 
   <div class="dna-grid">
@@ -1092,7 +1198,7 @@
       <div class="pipe-item">Email: <span>canal principal de contato</span></div>
       <div class="pipe-item">WhatsApp: <span>suporte, implantação e relacionamento</span></div>
       <div class="dna-note">
-        Guarde seu DNA. Ele será usado para recuperar contexto, organizar leads e ativar recursos personalizados do Forge.
+        Guarde seu DNA (ex: <code>FORGE-DNA-XXXX-...</code>). Ele fica salvo no navegador e o app local em <code>localhost:3000</code> usa automaticamente para personalizar a conversa.
       </div>
     </div>
 
@@ -1115,6 +1221,72 @@
 
       <div id="dna-output" class="dna-output">
         Preencha os três campos para gerar seu DNA único.
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- COMO USAR -->
+<section id="usage">
+  <span class="section-label reveal">Como usar</span>
+  <h2 class="section-title reveal">Do DNA à entrega<br>em 6 passos.</h2>
+  <p class="section-body reveal">
+    Fluxo oficial para começar com o Forge hoje: gere identidade, instale, configure a IA e converse com contexto contínuo.
+  </p>
+
+  <div class="repo-card reveal">
+    <div class="repo-label">Repositório oficial</div>
+    <a class="repo-url" href="https://github.com/rafaelferreira2312/forge" target="_blank" rel="noreferrer">https://github.com/rafaelferreira2312/forge</a>
+    <p>Clone, instale com um comando ou siga o passo a passo manual abaixo. Licença MIT · open source.</p>
+  </div>
+
+  <div class="usage-steps">
+    <div class="usage-step reveal">
+      <div class="usage-num">1</div>
+      <div class="usage-body">
+        <span class="usage-tag">obrigatório</span>
+        <h4>Gere seu DNA Forge</h4>
+        <p>Na seção <a href="#dna">DNA Forge</a> acima, preencha nome/empresa, email e WhatsApp. Você recebe um código único <strong>FORGE-DNA-...</strong> salvo no navegador.</p>
+        <p>Com o backend rodando, o DNA também é gravado via <code>POST /api/leads/dna</code>.</p>
+      </div>
+    </div>
+    <div class="usage-step reveal">
+      <div class="usage-num">2</div>
+      <div class="usage-body">
+        <h4>Instale o Forge</h4>
+        <p>Use o instalador automático na seção <a href="#install">Instalação</a> ou clone o repositório:</p>
+        <p><code style="color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:12px">git clone https://github.com/rafaelferreira2312/forge.git && cd forge</code></p>
+      </div>
+    </div>
+    <div class="usage-step reveal">
+      <div class="usage-num">3</div>
+      <div class="usage-body">
+        <h4>Suba o servidor</h4>
+        <p>Linux/macOS/WSL: <code>cargo run -p forge-infrastructure</code> ou <code>./target/release/forge</code> após o build.</p>
+        <p>Abra <a href="http://localhost:3000" target="_blank" rel="noreferrer">http://localhost:3000</a> no navegador (de preferência o mesmo onde gerou o DNA).</p>
+      </div>
+    </div>
+    <div class="usage-step reveal">
+      <div class="usage-num">4</div>
+      <div class="usage-body">
+        <h4>Configure uma IA</h4>
+        <p>No setup inicial ou em <strong>⚙ Config</strong>, escolha provider e modelo. Recomendado: <strong>Groq</strong> (grátis) ou <strong>Ollama</strong> (local). Cole API key se necessário.</p>
+      </div>
+    </div>
+    <div class="usage-step reveal">
+      <div class="usage-num">5</div>
+      <div class="usage-body">
+        <h4>Converse com o Forge</h4>
+        <p>Digite como se falasse com uma pessoa. O Forge detecta intenção, monta o prompt e mostra para você decidir: <strong>🔥 Forge pedir</strong>, copiar ou usar em outra IA.</p>
+      </div>
+    </div>
+    <div class="usage-step reveal">
+      <div class="usage-num">6</div>
+      <div class="usage-body">
+        <h4>Receba arquivos e continue</h4>
+        <p>Quando pedir PDF, planilha, HTML ou documento, o Forge gera a entrega na conversa com layout profissional. A conversa mantém contexto — continue refinando abaixo.</p>
       </div>
     </div>
   </div>
@@ -1303,6 +1475,12 @@
   <p class="section-body reveal" id="os-detected-msg">
     Detectando seu sistema operacional...
   </p>
+
+  <div class="repo-card reveal" style="margin-top:24px">
+    <div class="repo-label">Clone manual</div>
+    <a class="repo-url" href="https://github.com/rafaelferreira2312/forge" target="_blank" rel="noreferrer">git clone https://github.com/rafaelferreira2312/forge.git</a>
+    <p>Passo 1 do uso: gere o <a href="#dna" style="color:var(--ember)">DNA Forge</a> antes de abrir o app pela primeira vez.</p>
+  </div>
 
   <div class="install-hero reveal" id="install-hero-block">
     <div class="code-block" style="max-width:680px;margin:40px auto 0">
@@ -1666,8 +1844,9 @@ docker compose up -d
     Open source, local, gratuito. Nenhum dado seu sai da máquina. Começa com uma linha de código.
   </p>
   <div class="cta-buttons reveal">
-    <a href="#install" class="btn-primary">Instalar agora</a>
-    <a href="https://github.com/rafaelferreira2312/forge" class="btn-secondary">Ver no GitHub →</a>
+    <a href="#dna" class="btn-primary">Gerar DNA Forge</a>
+    <a href="#install" class="btn-secondary">Instalar agora</a>
+    <a href="https://github.com/rafaelferreira2312/forge" class="btn-secondary" target="_blank" rel="noreferrer">Repositório →</a>
   </div>
 </div>
 
@@ -1675,7 +1854,7 @@ docker compose up -d
 <footer>
   <span class="footer-logo"><img class="brand-mark" src="images/forge-logo.png" alt="Logo Forge">FORGE</span>
   <span class="footer-text">MIT License · Feito com Rust · Roda na sua máquina</span>
-  <span class="footer-text">github.com/rafaelferreira2312/forge</span>
+  <span class="footer-text"><a href="https://github.com/rafaelferreira2312/forge" style="color:var(--dim);text-decoration:none" target="_blank" rel="noreferrer">github.com/rafaelferreira2312/forge</a></span>
 </footer>
 
 <script>

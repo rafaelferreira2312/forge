@@ -83,6 +83,14 @@ impl ApplicationEngine {
     }
 
     pub fn engineer(&self, request: EngineerRequest) -> EngineerResponse {
+        self.engineer_internal(request, true)
+    }
+
+    pub fn preview(&self, request: EngineerRequest) -> EngineerResponse {
+        self.engineer_internal(request, false)
+    }
+
+    fn engineer_internal(&self, request: EngineerRequest, record: bool) -> EngineerResponse {
         let expertise = self
             .profile
             .lock()
@@ -96,7 +104,9 @@ impl ApplicationEngine {
         let response = self
             .pipeline
             .engineer_with_expertise(request, expertise, media_prompt);
-        self.record(&response);
+        if record {
+            self.record(&response);
+        }
         response
     }
 

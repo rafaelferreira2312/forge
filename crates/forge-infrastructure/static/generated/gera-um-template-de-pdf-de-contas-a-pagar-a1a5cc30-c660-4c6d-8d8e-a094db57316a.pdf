@@ -1,0 +1,71 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 2215 >>
+stream
+BT /F1 11 Tf 50 780 Td (gera um template de pdf de contas a pagar) Tj ET
+BT /F1 11 Tf 50 763 Td () Tj ET
+BT /F1 11 Tf 50 746 Td (**Template de PDF de Contas a Pagar**) Tj ET
+BT /F1 11 Tf 50 729 Td () Tj ET
+BT /F1 11 Tf 50 712 Td (**T?tulo:** Contas a Pagar) Tj ET
+BT /F1 11 Tf 50 695 Td () Tj ET
+BT /F1 11 Tf 50 678 Td (**Data:** [Insira a data]) Tj ET
+BT /F1 11 Tf 50 661 Td () Tj ET
+BT /F1 11 Tf 50 644 Td (**Fornecedor**) Tj ET
+BT /F1 11 Tf 50 627 Td () Tj ET
+BT /F1 11 Tf 50 610 Td (| Nome do Fornecedor | C?digo | Valor | Data de Vencimento | Situa??o |) Tj ET
+BT /F1 11 Tf 50 593 Td (| --- | --- | --- | --- | --- |) Tj ET
+BT /F1 11 Tf 50 576 Td (| [Insira o nome do fornecedor] | [Insira o c?digo do fornecedor] | [Insira o valor] | [Insira ) Tj ET
+BT /F1 11 Tf 50 559 Td (| [Insira o nome do fornecedor] | [Insira o c?digo do fornecedor] | [Insira o valor] | [Insira ) Tj ET
+BT /F1 11 Tf 50 542 Td () Tj ET
+BT /F1 11 Tf 50 525 Td (**Observa??es:**) Tj ET
+BT /F1 11 Tf 50 508 Td () Tj ET
+BT /F1 11 Tf 50 491 Td (* [Insira observa??es adicionais]) Tj ET
+BT /F1 11 Tf 50 474 Td () Tj ET
+BT /F1 11 Tf 50 457 Td (**Total:**) Tj ET
+BT /F1 11 Tf 50 440 Td () Tj ET
+BT /F1 11 Tf 50 423 Td (* Valor total: [Insira o valor total]) Tj ET
+BT /F1 11 Tf 50 406 Td (* N?mero de parcelas: [Insira o n?mero de parcelas]) Tj ET
+BT /F1 11 Tf 50 389 Td () Tj ET
+BT /F1 11 Tf 50 372 Td (**Pagamento:**) Tj ET
+BT /F1 11 Tf 50 355 Td () Tj ET
+BT /F1 11 Tf 50 338 Td (* Forma de pagamento: [Insira a forma de pagamento]) Tj ET
+BT /F1 11 Tf 50 321 Td (* Data do pagamento: [Insira a data do pagamento]) Tj ET
+BT /F1 11 Tf 50 304 Td () Tj ET
+BT /F1 11 Tf 50 287 Td (**Assinatura:**) Tj ET
+BT /F1 11 Tf 50 270 Td () Tj ET
+BT /F1 11 Tf 50 253 Td (* [Insira a assinatura]) Tj ET
+BT /F1 11 Tf 50 236 Td () Tj ET
+BT /F1 11 Tf 50 219 Td (**Raz?o Social:** [Insira a raz?o social da empresa]) Tj ET
+BT /F1 11 Tf 50 202 Td () Tj ET
+BT /F1 11 Tf 50 185 Td (**Inscri??o Estadual:** [Insira a inscri??o estadual da empresa]) Tj ET
+BT /F1 11 Tf 50 168 Td () Tj ET
+BT /F1 11 Tf 50 151 Td (**Endere?o:** [Insira o endere?o da empresa]) Tj ET
+BT /F1 11 Tf 50 134 Td () Tj ET
+BT /F1 11 Tf 50 117 Td (**Contato:** [Insira o contato da empresa]) Tj ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2578
+%%EOF
